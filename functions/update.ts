@@ -8,5 +8,5 @@ exports.handler = async (event: any) => {
     text: "I got your message!",
     });
 
-    return true;
-  };
+    return { statusCode: 200 };
+};
