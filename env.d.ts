@@ -6,6 +6,7 @@ declare global {
       BOT_TOKEN: string;
       LOGTAIL_SOURCE_TOKEN: string;
       PRIVATE_RPC_ENDPOINT_MAINNET: string;
+      NOTIFICATION_CHANNEL: string;
     }
   }
 }
