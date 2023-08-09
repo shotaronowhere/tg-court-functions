@@ -7,4 +7,6 @@ exports.handler = async (event: any) => {
     chat_id: JSON.parse(event.body).message.chat.id,
     text: "I got your message!",
     });
+
+    return true;
   };
