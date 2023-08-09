@@ -1,2 +1,7 @@
-[functions]
-    directory = "functions"
+[build]
+  functions = "functions"
+  command = "netlify-lambda install && mkdir ./public"
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
