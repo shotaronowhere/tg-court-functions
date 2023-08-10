@@ -5,7 +5,7 @@ import { Handler, schedule } from "@netlify/functions";
 
 const handler: Handler = async () => {
     try{
-
+        await wait(2000)
         const responseDisputeCreation = await datalake
         .from(`bot-block-heights`)
         .select("timestamp")
@@ -96,5 +96,7 @@ const handler: Handler = async () => {
       }
 
 };
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 module.exports.handler = schedule("* * * * *", handler);
