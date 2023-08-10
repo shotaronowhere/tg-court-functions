@@ -1,5 +1,5 @@
 import axios from "axios";
-import ethers from "ethers";
+import { isAddress } from "ethers";
 import { datalake } from "../config/supabase";
 
 const regexp = /\/start/
@@ -11,7 +11,7 @@ exports.handler = async (event: any) => {
     const tg_user_id = msg.from.id;
 
     if(msg.text.length == 42 && msg.text.startsWith("0x")){
-        if(!ethers.isAddress(msg.text)){
+        if(!isAddress(msg.text)){
             await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
                 chat_id: tg_user_id,
                 text: "This is not a valid Ethereum address.",
