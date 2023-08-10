@@ -73,7 +73,7 @@ const handler: Handler = async () => {
                 chat_id: process.env.NOTIFICATION_CHANNEL,
                 text: `[Dispute ${dispute.disputeID}](https://court.kleros.io/cases/${dispute.disputeID}) created on Gnosis!
                 
-    Arbitrable ${responseTag.length > 0 ? `[${responseTag[0].key1} / ${responseTag[0].key2}](${responseTag[0].key3})` : `[${dispute.arbitrable.id}](https://gnosis.io/address/${dispute.arbitrable.id})`}
+    Arbitrable ${responseTag.length > 0 ? `[${responseTag[0].key1} / ${responseTag[0].key2}](${responseTag[0].key3})` : `[${dispute.arbitrable.id}](https://gnosisscan.io/address/${dispute.arbitrable.id})`}
     Subcourt: ${res.data.name}`,
                 parse_mode: 'Markdown',
                 disable_web_page_preview: true
