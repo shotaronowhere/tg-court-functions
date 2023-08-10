@@ -115,7 +115,7 @@ const handler: Handler = async () => {
             console.log(res?.data)
             await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
                 chat_id: process.env.NOTIFICATION_CHANNEL,
-                text: `Dispute ${appeal.disputeID}](https://court.kleros.io/cases/${appeal.disputeID}) on Mainnet concluded it's current round!
+                text: `[Dispute ${appeal.disputeID}](https://court.kleros.io/cases/${appeal.disputeID}) on Mainnet concluded it's current round!
                 
     *${description}*
 
