@@ -123,7 +123,7 @@ const handler: Handler = async () => {
 
     Answer: ${answerString}
   
-Appeals can be [requested]${isReality? `(https://resolve.kleros.io/cases/${appeal.disputeID})` : `(https://court.kleros.io/cases/${appeal.disputeID})`}.`,
+Appeals can be [requested]${isReality? `(https://resolve.kleros.io/cases/${appeal.disputeID})` : `(https://court.kleros.io/cases/${appeal.disputeID})`}. View votes on [KlerosBoard](https://klerosboard.com/100/cases/${appeal.disputeID})`,
                 parse_mode: 'Markdown',
                 disable_web_page_preview: true
                 });
