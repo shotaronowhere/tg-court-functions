@@ -26,10 +26,10 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
 
         if(msg.text.length == 42 && msg.text.startsWith("0x")){
             if(!isAddress(msg.text)){
-                bot.sendMessage(tg_user_id, "This is not a valid Ethereum address.");
+                await bot.sendMessage(tg_user_id, "This is not a valid Ethereum address.");
                 return { statusCode: 200 };
             } else {
-                bot.sendMessage(tg_user_id, "Thank you! I will notify you when a dispute is created for this address. You can change the address at any time by sending me a new one.");
+                await bot.sendMessage(tg_user_id, "Thank you! I will notify you when a dispute is created for this address. You can change the address at any time by sending me a new one.");
                 await datalake.from(`tg-notifications-hermes`).upsert({tg_user_id: tg_user_id, juror_address: msg.text})
                 return { statusCode: 200 };
             }
@@ -40,7 +40,7 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
 
         // check regex
         if(regexp.test(msg.text)){
-            bot.sendMessage(tg_user_id, "Hi! My name is Hermes, the Kleros Messenger.\n\nPlease send me the juror address for which you would like me to notify you about.");
+            await bot.sendMessage(tg_user_id, "Hi! My name is Hermes, the Kleros Messenger.\n\nPlease send me the juror address for which you would like me to notify you about.");
         }
 
         return { statusCode: 200 };
