@@ -1,6 +1,7 @@
 import axios from "axios";
 import { isAddress } from "ethers";
 import { datalake } from "../config/supabase";
+import { StatusCodes } from "http-status-codes";
 require('dotenv').config()
 import { Bot, webhookCallback } from 'grammy'
 const { BOT_TOKEN, FUNCTION_SECRET } = process.env
@@ -15,8 +16,16 @@ exports.handler = async (event: any) => {
         if (event.headers["x-telegram-bot-api-secret-token"] !== FUNCTION_SECRET)
           return new Response('not allowed', { status: 405 })
     
-        return await handleUpdate(event)
+        await handleUpdate(event)
+
+        return {
+            statusCode: StatusCodes.OK
+        }  
     } catch (err) {
-    console.error(err)
+        console.error(err)
+        return {
+            statusCode: StatusCodes.BAD_REQUEST,
+            body: JSON.stringify({ error: err }),
+        };
     }
 }
