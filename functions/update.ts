@@ -14,8 +14,6 @@ const bot = new TelegramBot(BOT_TOKEN, {polling: false});
 const rateLimit = new NodeCache( { stdTTL: 60, checkperiod: 30 } );
 const throttleCount = 10;
 
-const regexp = /\/start/
-
 const commands: {regexp: RegExp, callback: any}[] = [
     start,
     subscribe,

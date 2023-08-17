@@ -1,6 +1,5 @@
 import * as TelegramBot from "node-telegram-bot-api";
-const provider = new WebSocketProvider(process.env.PRIVATE_RPC_ENDPOINT_MAINNET);
-import { isAddress, WebSocketProvider } from "ethers";
+import { isAddress, JsonRpcProvider, WebSocketProvider } from "ethers";
 import { datalake } from "../../config/supabase";
 /*
  * /subscribe
@@ -25,6 +24,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
         }
         address = msg.text;
     } else if(match[0].endsWith(".eth")){
+        const provider = new JsonRpcProvider(process.env.RPC_URL_MAINNET);
         const resp = await provider.resolveName(match[0])
         if(!resp){
             await bot.sendMessage(msg.chat.id, "This ENS name does not resolve to an address.");
