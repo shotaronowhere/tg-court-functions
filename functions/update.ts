@@ -11,9 +11,8 @@ bot.command('start', ctx => ctx.reply('Hello!'))
 
 exports.handler = async (event: any) => {
     try {
-        console.log(event)
-        const url = new URL(event.url)
-        if (url.searchParams.get('secret') !== FUNCTION_SECRET)
+        console.log(event.headers["x-telegram-bot-api-secret-token"])
+        if (event.headers["x-telegram-bot-api-secret-token"] !== FUNCTION_SECRET)
           return new Response('not allowed', { status: 405 })
     
         return await handleUpdate(event)
