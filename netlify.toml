@@ -1,4 +1,4 @@
 [build]
   functions = "functions"
 [build.environment]
-  RPC_URL_MAINNET=https://rpc.ankr.com/eth
+  RPC_URL_MAINNET="https://rpc.ankr.com/eth"
