@@ -19,22 +19,20 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
             
         const json = JSON.parse(event.body)
         const msg = json?.message as TelegramBot.Message;
-        console.log(json)
-        console.log(msg)
-        if(!msg || msg.from?.id || !msg.text)
+
+        if(!msg || !msg.from?.id || !msg.text)
             return {statusCode: StatusCodes.BAD_REQUEST, err: "Invalid or no message found in body."};
 
-        console.log(msg)
         const tg_user_id = msg.from?.id!;
 
         if(msg.text.length == 42 && msg.text.startsWith("0x")){
             if(!isAddress(msg.text)){
                 await bot.sendMessage(tg_user_id, "This is not a valid Ethereum address.");
-                return { statusCode: 200 };
+                return { statusCode: StatusCodes.OK };
             } else {
                 await bot.sendMessage(tg_user_id, "Thank you! I will notify you when a dispute is created for this address. You can change the address at any time by sending me a new one.");
                 await datalake.from(`tg-notifications-hermes`).upsert({tg_user_id: tg_user_id, juror_address: msg.text})
-                return { statusCode: 200 };
+                return { statusCode: StatusCodes.OK };
             }
         }
 
@@ -46,7 +44,7 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
             await bot.sendMessage(tg_user_id, "Hi! My name is Hermes, the Kleros Messenger.\n\nPlease send me the juror address for which you would like me to notify you about.");
         }
 
-        return { statusCode: 200 };
+        return { statusCode: StatusCodes.OK };
     } catch (e) {
         console.log(e);
         return {
