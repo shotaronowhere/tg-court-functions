@@ -7,6 +7,7 @@ declare global {
       LOGTAIL_SOURCE_TOKEN: string;
       PRIVATE_RPC_ENDPOINT_MAINNET: string;
       NOTIFICATION_CHANNEL: string;
+      FUNCTION_SECRET: string;
     }
   }
 }
