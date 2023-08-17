@@ -13,6 +13,7 @@ let counter = 0;
 
 exports.handler = async (event: { headers: { [x: string]: string; }; body: string; }) => {
     try {
+        console.log(event)
         if (event.headers["x-telegram-bot-api-secret-token"] !== FUNCTION_SECRET)
             return {statusCode: StatusCodes.UNAUTHORIZED};
             
