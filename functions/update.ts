@@ -19,7 +19,8 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
             
         const json = JSON.parse(event.body)
         const msg = json?.message as TelegramBot.Message;
-        
+        console.log(json)
+        console.log(msg)
         if(!msg || msg.from?.id || !msg.text)
             return {statusCode: StatusCodes.BAD_REQUEST, err: "Invalid or no message found in body."};
 
