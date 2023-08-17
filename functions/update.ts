@@ -23,6 +23,7 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         if(!msg || msg.from?.id || !msg.text)
             return {statusCode: StatusCodes.BAD_REQUEST, err: "Invalid or no message found in body."};
 
+        console.log(msg)
         const tg_user_id = msg.from?.id!;
 
         if(msg.text.length == 42 && msg.text.startsWith("0x")){
@@ -46,6 +47,7 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
 
         return { statusCode: 200 };
     } catch (e) {
+        console.log(e);
         return {
             statusCode: StatusCodes.BAD_REQUEST,
             body: JSON.stringify({ error: e }),
