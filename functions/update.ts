@@ -2,21 +2,22 @@ import axios from "axios";
 import { isAddress } from "ethers";
 import { datalake } from "../config/supabase";
 import { StatusCodes } from "http-status-codes";
-
 import * as TelegramBot from "node-telegram-bot-api";
+import * as NodeCacheType from "node-cache";
 const tgBot = require("node-telegram-bot-api");
+const NodeCache = require( "node-cache" );
 const { FUNCTION_SECRET, BOT_TOKEN } = process.env
 const bot: TelegramBot = new tgBot(BOT_TOKEN, {polling: false, testEnvironment: false});  
-const regexp = /\/start/
+const rateLimit: NodeCacheType = new NodeCache( { stdTTL: 60, checkperiod: 90 } );
+const throttleCount = 10;
 
-let counter = 0;
+const regexp = /\/start/
 
 exports.handler = async (event: { headers: { [x: string]: string; }; body: string; }) => {
     try {
-        console.log(event)
         if (event.headers["x-telegram-bot-api-secret-token"] !== FUNCTION_SECRET)
             return {statusCode: StatusCodes.UNAUTHORIZED};
-            
+        
         const json = JSON.parse(event.body)
         const msg = json?.message as TelegramBot.Message;
 
@@ -24,6 +25,14 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
             return {statusCode: StatusCodes.BAD_REQUEST, err: "Invalid or no message found in body."};
 
         const tg_user_id = msg.from?.id!;
+        const msgsLastMinute = rateLimit.get(tg_user_id) as number ?? 0;
+
+        if(msgsLastMinute > throttleCount){
+            bot.sendMessage(tg_user_id, "Please wait a minute before sending another message.");
+            return { statusCode: StatusCodes.OK };
+        } else {
+            rateLimit.set(tg_user_id, msgsLastMinute + 1);
+        }
 
         if(msg.text.length == 42 && msg.text.startsWith("0x")){
             if(!isAddress(msg.text)){
@@ -35,9 +44,6 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
                 return { statusCode: StatusCodes.OK };
             }
         }
-
-        counter++;
-        console.log(counter);
 
         // check regex
         if(regexp.test(msg.text)){
