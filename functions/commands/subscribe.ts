@@ -8,7 +8,9 @@ const regexp = /^\/subscribe/
 const regexpFull = /^\/subscribe (.+)/
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
+    console.log("subscribe", msg.text);
     const match = msg.text!.match(regexpFull);
+    console.log(match)
     if (!match){
         await bot.sendMessage(msg.chat.id, 
             "Please send me the juror address or ens for which you would like me to notify you about. eg \`/subscribe 0xa1f...2fa\` or \`/subscribe vb.eth\`");
