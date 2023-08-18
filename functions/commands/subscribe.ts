@@ -13,7 +13,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     console.log(match)
     if (!match){
         await bot.sendMessage(msg.chat.id, 
-            "Please send me the juror address or ens for which you would like me to notify you about. eg \`/subscribe 0xa1f...2fa\` or \`/subscribe vb.eth\`");
+            "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe vb.eth\`.");
         return;
     }
 
@@ -21,15 +21,15 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
 
     if(match[0].length == 42 && match[0].startsWith("0x")){
         if(!isAddress(msg.text)){
-            await bot.sendMessage(msg.chat.id, "This is not a valid Ethereum address.");
+            await bot.sendMessage(msg.chat.id, "Not a valid address.");
             return;
         }
         address = msg.text;
-    } else if(match[0].endsWith(".eth")){
+    } else if(match[1].endsWith(".eth")){
         const provider = new JsonRpcProvider(process.env.RPC_URL_MAINNET);
-        const resp = await provider.resolveName(match[0])
+        const resp = await provider.resolveName(match[1])
         if(!resp){
-            await bot.sendMessage(msg.chat.id, "This ENS name does not resolve to an address.");
+            await bot.sendMessage(msg.chat.id, "ENS name does not resolve to an address.");
             return
         } 
         address = resp;
