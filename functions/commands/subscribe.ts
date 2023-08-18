@@ -1,5 +1,5 @@
 import * as TelegramBot from "node-telegram-bot-api";
-import { isAddress, JsonRpcProvider, WebSocketProvider } from "ethers";
+import { isAddress, getAddress, JsonRpcProvider } from "ethers";
 import { datalake } from "../../config/supabase";
 /*
  * /subscribe
@@ -25,7 +25,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
             await bot.sendMessage(msg.chat.id, "Not a valid address.");
             return;
         }
-        address = match[1];
+        address = getAddress(match[1]);
     } else if(match[1].endsWith(".eth")){
         const provider = new JsonRpcProvider(process.env.RPC_URL_MAINNET);
         const resp = await provider.resolveName(match[1])
