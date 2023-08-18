@@ -13,7 +13,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     console.log(match)
     if (!match){
         await bot.sendMessage(msg.chat.id, 
-            "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe vb.eth\`.");
+            "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe juror.eth\`.");
         return;
     }
 
