@@ -12,7 +12,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     const match = msg.text!.match(regexpFull);
     if (!match){
         await bot.sendMessage(msg.chat.id, 
-            "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe juror.eth\`.",
+            "Please specify a juror, \`/subscribe <0xa1f...2fa or juror.eth>\`.",
             {parse_mode: "Markdown"});
         return;
     }
