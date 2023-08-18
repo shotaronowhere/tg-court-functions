@@ -7,7 +7,8 @@ const regexp = /\/start/
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     await bot.sendMessage(msg.from?.id!,
-        "Hi! My name is Hermes, the Kleros Messenger.\n\nI deliver jury summons from the Kleros court. You can \`/susbcribe\` to your juror address and \`/unsubscribe\` at anytime.");
+        "Hi! My name is Hermes, the Kleros Messenger. I deliver jury summons from the Kleros court.\n\n\`/subscribe\` or \`/unsubscribe\` at anytime.",
+        {parse_mode: "Markdown"});
     return;
 }
 
