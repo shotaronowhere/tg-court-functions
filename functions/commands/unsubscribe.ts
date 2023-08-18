@@ -7,7 +7,7 @@ import { datalake } from "../../config/supabase";
 const regexp = /\/unsubscribe/
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
-    await bot.sendMessage(msg.chat.id, "You are unsubscribed from all notifications.");
+    await bot.sendMessage(msg.chat.id, "You are unsubscribed.");
     await datalake.from(`tg-notifications-hermes`).delete().eq('tg_user_id', msg.from?.id)
     return;
 }

@@ -36,7 +36,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     }
 
     await bot.sendMessage(msg.chat.id, "Thank you! I will notify you when a dispute is created for this address. You can change the address at any time by sending me a new one.");
-    await datalake.from(`tg-notifications-hermes`).upsert({tg_user_id: msg.from?.id, juror_address: msg.text})
+    await datalake.from(`tg-notifications-hermes`).upsert({tg_user_id: msg.from?.id, juror_address: address})
     return;
 }
 
