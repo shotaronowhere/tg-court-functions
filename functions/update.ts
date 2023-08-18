@@ -32,7 +32,8 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
 
         if(!msg || !msg.from?.id || !msg.text || msg.chat.type !== "private"){
             console.error("Invalid or no message found in body.")
-            return {statusCode: StatusCodes.BAD_REQUEST};
+            // avoid Telegram API retry by sending OK status
+            return { statusCode: StatusCodes.OK };
         }
 
         const tg_user_id = msg.from?.id!;
@@ -53,8 +54,7 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
 
     } catch (e) {
         console.log(e);
-        return {
-            statusCode: StatusCodes.BAD_REQUEST
-        };
+        // avoid Telegram API retry by sending OK status
+        return { statusCode: StatusCodes.OK };
     }
 };

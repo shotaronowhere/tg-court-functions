@@ -1,16 +1,15 @@
 import * as TelegramBot from "node-telegram-bot-api";
 import { isAddress, getAddress, JsonRpcProvider } from "ethers";
-import { datalake } from "../../config/supabase";
+import { notificationSystem } from "../../config/supabase";
 /*
  * /subscribe
  */
-const regexp = /^\/subscribe/
-const regexpFull = /^\/subscribe (.+)/
+const regexp = /^\/subscribe/;
+const regexpFull = /^\/subscribe (.+)/;
+const max_subscriptions = 10;
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
-    console.log("subscribe", msg.text);
     const match = msg.text!.match(regexpFull);
-    console.log(match)
     if (!match){
         await bot.sendMessage(msg.chat.id, 
             "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe juror.eth\`.",
@@ -36,13 +35,20 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
         address = resp;
     } else {
         await bot.sendMessage(msg.chat.id, 
-            "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe juror.eth\`.",
+            "Please specify a juror, \`/subscribe <0xa1f...2fa or juror.eth>\`.",
             {parse_mode: "Markdown"});
         return;
     }
+    const count = await notificationSystem.from(`tg-notifications-hermes`).select("*", { count: 'exact', head: true }).eq("tg_user_id", msg.from?.id)
+    if (!count)
+        return;
 
+    if (count.count! > max_subscriptions){
+        await bot.sendMessage(msg.chat.id, "You already have the max # of subscriptions.");
+        return
+    }
     await bot.sendMessage(msg.chat.id, "Thank you! I will notify you when a dispute is created for this juror.");
-    await datalake.from(`tg-notifications-hermes`).upsert({tg_user_id: msg.from?.id, juror_address: address})
+    await notificationSystem.from(`tg-notifications-hermes`).upsert({tg_user_id: msg.from?.id, juror_address: address})
     return;
 }
 
