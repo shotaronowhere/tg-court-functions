@@ -6,7 +6,8 @@ import * as TelegramBot from "node-telegram-bot-api";
 const regexp = /\/start/
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
-    await bot.sendMessage(msg.from?.id!, "Hi! My name is Hermes, the Kleros Messenger.\n\nPlease send me the juror address or ens for which you would like me to notify you about.");
+    await bot.sendMessage(msg.from?.id!,
+        "Hi! My name is Hermes, the Kleros Messenger.\n\nI deliver jury summons from the Kleros court. You can \`/susbcribe\` to your juror address and \`/unsubscribe\` at anytime.");
     return;
 }
 
