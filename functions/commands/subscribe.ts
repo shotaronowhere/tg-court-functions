@@ -13,18 +13,19 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     console.log(match)
     if (!match){
         await bot.sendMessage(msg.chat.id, 
-            "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe juror.eth\`.");
+            "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe juror.eth\`.",
+            {parse_mode: "Markdown"});
         return;
     }
 
     let address: string | undefined = undefined;
 
-    if(match[0].length == 42 && match[0].startsWith("0x")){
-        if(!isAddress(msg.text)){
+    if(match[1].length == 42 && match[1].startsWith("0x")){
+        if(!isAddress(match[1])){
             await bot.sendMessage(msg.chat.id, "Not a valid address.");
             return;
         }
-        address = msg.text;
+        address = match[1];
     } else if(match[1].endsWith(".eth")){
         const provider = new JsonRpcProvider(process.env.RPC_URL_MAINNET);
         const resp = await provider.resolveName(match[1])
@@ -35,7 +36,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
         address = resp;
     }
 
-    await bot.sendMessage(msg.chat.id, "Thank you! I will notify you when a dispute is created for this address. You can change the address at any time by sending me a new one.");
+    await bot.sendMessage(msg.chat.id, "Thank you! I will notify you when a dispute is created for this juror.");
     await datalake.from(`tg-notifications-hermes`).upsert({tg_user_id: msg.from?.id, juror_address: address})
     return;
 }
