@@ -20,7 +20,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
 
     let address: string | undefined = undefined;
 
-    if(match[1].length == 42 && match[1].startsWith("0x")){
+    if(match[1].startsWith("0x")){
         if(!isAddress(match[1])){
             await bot.sendMessage(msg.chat.id, "Not a valid address.");
             return;
@@ -34,6 +34,11 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
             return
         } 
         address = resp;
+    } else {
+        await bot.sendMessage(msg.chat.id, 
+            "Please specify a juror, \`/subscribe 0xa1f...2fa\` or \`/subscribe juror.eth\`.",
+            {parse_mode: "Markdown"});
+        return;
     }
 
     await bot.sendMessage(msg.chat.id, "Thank you! I will notify you when a dispute is created for this juror.");
