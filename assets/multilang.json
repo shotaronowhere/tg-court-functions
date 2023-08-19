@@ -1,0 +1,51 @@
+{
+    "bot": {
+        "names":{
+            "en": "Hermes | The Kleros Messenger",
+            "fr": "Hermes | Le messager de Kleros",
+            "es": "Hermes | El Mensajero de Kleros"
+        },
+        "short_descriptions":{
+            "en": "I am Hermes, the Kleros Messenger. I deliver jury duty summons from the Kleros Court.",
+            "fr": "Je suis Hermès, le messager de Kleros. Je délivre les convocations des jurés de la Cour de Kléros.",
+            "es": "Soy Hermes, el Mensajero de Kleros. Entrego citaciones de jurado del Tribunal de Kleros."
+        },
+        "descriptions":{
+            "en": "I am Hermes, the Kleros Messenger. I deliver jury duty summons from the Kleros Court.",
+            "fr": "Je suis Hermès, le messager de Kleros. Je délivre les convocations des jurés de la Cour de Kléros.",
+            "es": "Soy Hermes, el Mensajero de Kleros. Entrego citaciones de jurado del Tribunal de Kleros."
+        },
+        "commands":{
+            "en": [
+                {
+                    "command": "subscribe",
+                    "description": "<address or ens>"
+                },
+                {
+                    "command": "unsubscribe",
+                    "description": "stop notifications"
+                }
+            ],
+            "fr": [
+                {
+                    "command": "souscrire",
+                    "description": "<adresse ou ens>"
+                },
+                {
+                    "command": "desinscrire",
+                    "description": "arrêter les notifications"
+                }
+            ],
+            "es": [
+                {
+                    "command": "suscribase",
+                    "description": "<dirección o ens>"
+                },
+                {
+                    "command": "cancelar",
+                    "description": "detener notificaciones"
+                }
+            ]
+        }
+    }
+}
