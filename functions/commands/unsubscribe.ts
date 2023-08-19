@@ -22,13 +22,22 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     let subscriptions = []
 
     for (const juror of jurors?.data!) {
+        const fullAddress = juror.juror_address as string;
+        const shortAddress = fullAddress.slice(0, 6) + "..." + fullAddress.slice(-4);
         subscriptions.push(
             [{
-                text: juror.juror_address,
-                callback_data: juror.juror_address
+                text: shortAddress,
+                callback_data: fullAddress
             }]
         );
     }
+
+    subscriptions.push(
+        [{
+            text: 'cancel',
+            callback_data: 'cancel'
+        }]
+    );
 
     await bot.sendMessage(
         msg.chat.id, 
