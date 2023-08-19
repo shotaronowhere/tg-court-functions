@@ -30,26 +30,25 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         
         const json = JSON.parse(event.body) as TelegramBot.Update;
 
-        console.log(event)
         if (!json){
             console.error("JSON parsing error.")
             // avoid Telegram API retry by sending OK status
             return { statusCode: StatusCodes.OK };
         }
 
-        const msg = json?.message as TelegramBot.Message;
+        let msg = json?.message as TelegramBot.Message;
         const callback_query = json?.callback_query as TelegramBot.CallbackQuery;
+        if (callback_query)
+            msg = callback_query.message as TelegramBot.Message;
 
-        console.log(json)
+            if(!msg || !msg.from?.id || !msg.text || msg.chat.type !== "private"){
+                console.error("Invalid or no message found in body.")
+                // avoid Telegram API retry by sending OK status
+                return { statusCode: StatusCodes.OK };
+            }
 
         if (callback_query){
-            await unsubscribeCallbackQuery.callback(bot as any, msg, callback_query);
-            return { statusCode: StatusCodes.OK };
-        }
-
-        if(!msg || !msg.from?.id || !msg.text || msg.chat.type !== "private"){
-            console.error("Invalid or no message found in body.")
-            // avoid Telegram API retry by sending OK status
+            await unsubscribeCallbackQuery.callback(bot as any, callback_query);
             return { statusCode: StatusCodes.OK };
         }
 

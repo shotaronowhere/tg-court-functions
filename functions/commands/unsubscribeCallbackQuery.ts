@@ -7,19 +7,19 @@ import { unsubscribe } from "../../assets/multilang.json";
  */
 let regexps: RegExp[] = [];
 
-const callback = async (bot: TelegramBot, msg: TelegramBot.Message, callback_query: TelegramBot.CallbackQuery) => {
+const callback = async (bot: TelegramBot, callback_query: TelegramBot.CallbackQuery) => {
     
     console.log(callback_query);
 
     if (callback_query.data == "cancel"){
-        await bot.deleteMessage(msg.chat.id, msg.message_id);
+        await bot.deleteMessage(callback_query.message?.chat?.id!, callback_query.message?.message_id!);
         return;
     }
 
     await notificationSystem
         .from(`tg-notifications-hermes`)
         .delete()
-        .eq('tg_user_id', msg.from?.id)
+        .eq('tg_user_id', callback_query.message?.from?.id!)
         .eq('juror_address', callback_query.data);
 
     await bot.sendMessage(
