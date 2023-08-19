@@ -19,7 +19,7 @@ const callback = async (bot: TelegramBot, callback_query: TelegramBot.CallbackQu
     await notificationSystem
         .from(`tg-notifications-hermes`)
         .delete()
-        .eq('tg_user_id', callback_query.message?.from?.id!)
+        .eq('tg_user_id', callback_query.message?.chat?.id!)
         .eq('juror_address', callback_query.data);
 
     await bot.sendMessage(
