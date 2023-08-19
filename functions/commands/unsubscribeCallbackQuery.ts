@@ -9,6 +9,8 @@ let regexps: RegExp[] = [];
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message, callback_query: TelegramBot.CallbackQuery) => {
     
+    console.log(callback_query);
+
     if (callback_query.data == "cancel"){
         await bot.deleteMessage(msg.chat.id, msg.message_id);
         return;

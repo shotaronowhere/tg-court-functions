@@ -1,6 +1,6 @@
 import TelegramBot = require("node-telegram-bot-api");
 import axios from "axios";
-import { bot } from "./assets/multilang.json";
+import { bot } from "../assets/multilang.json";
 
 require('dotenv').config()
 const { BOT_TOKEN, WEB_HOOK_URL, FUNCTION_SECRET } = process.env
