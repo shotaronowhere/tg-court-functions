@@ -28,6 +28,7 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         }
         
         const json = JSON.parse(event.body)
+        console.log(json)
         const msg = json?.message as TelegramBot.Message;
 
         if(!msg || !msg.from?.id || !msg.text || msg.chat.type !== "private"){

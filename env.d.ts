@@ -6,6 +6,7 @@ declare global {
       NOTIFICATION_URL: string;
       NOTIFICATION_KEY: string;
       BOT_TOKEN: string;
+      WEB_HOOK_URL: string;
       LOGTAIL_SOURCE_TOKEN: string;
       PRIVATE_RPC_ENDPOINT_MAINNET: string;
       NOTIFICATION_CHANNEL: string;
