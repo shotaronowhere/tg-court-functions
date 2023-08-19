@@ -40,13 +40,13 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         let msg = json?.message as TelegramBot.Message;
         let callback_query = json?.callback_query as TelegramBot.CallbackQuery;
 
-        if(!msg || !msg.from?.id || msg.chat.type !== "private"){
+        if(!(msg || callback_query) || !(msg?.chat?.type == "private" || callback_query?.message?.chat.type == "private")){
             console.error("Invalid or no message found in body.")
             // avoid Telegram API retry by sending OK status
             return { statusCode: StatusCodes.OK };
         }
 
-        let lang_code = msg?.from?.language_code!
+        let lang_code = msg?.from?.language_code! || callback_query.from.language_code || "en";
         if (!lang_support[lang_code as keyof typeof lang_support])
             lang_code = "en";
 
@@ -62,6 +62,12 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
             return { statusCode: StatusCodes.OK };
         } else {
             rateLimit.set(tg_user_id, msgsLastMinute + 1);
+        }
+
+        if (!msg.text){
+            console.error("No text found in message.")
+            // avoid Telegram API retry by sending OK status
+            return { statusCode: StatusCodes.OK };
         }
 
         for (const command of commands){
