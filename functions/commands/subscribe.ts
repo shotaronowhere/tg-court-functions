@@ -54,7 +54,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     } else {
         await bot.sendMessage(
             msg.chat.id, 
-            subscribe.no_match[msg.from?.language_code as keyof typeof subscribe.no_match],
+            subscribe.invalid[msg.from?.language_code as keyof typeof subscribe.invalid],
             {parse_mode: "Markdown"}
         );
         return;

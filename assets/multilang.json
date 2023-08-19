@@ -76,6 +76,11 @@
             "fr": "Veuillez indiquer un juré, `/souscrire <0xa1f...2fa ou juror.eth>`.",
             "es": "Por favor, especifique un jurado, `/suscribase <0xa1f...2fa o juror.eth>`."
         },
+        "invalid": {
+            "en": "Invalid Juror`.",
+            "fr": "Juré invalide`.",
+            "es": "Jurado no válido`."
+        },
         "not_address": {
             "en": "Not a valid address.",
             "fr": "Adresse invalide.",
