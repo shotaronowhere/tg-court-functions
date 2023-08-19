@@ -32,7 +32,10 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     await bot.sendMessage(
         msg.chat.id, 
         "which juror do you want to unsubscribe?",
-        {reply_markup: {inline_keyboard: subscriptions}}
+        {
+            parse_mode: 'Markdown',
+            reply_markup: {inline_keyboard: subscriptions}
+        }
     );
     
     /*await notificationSystem
