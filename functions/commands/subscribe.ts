@@ -41,7 +41,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
         address = getAddress(match[1]);
     } else if(match[2].endsWith(".eth")){
         const provider = new JsonRpcProvider(process.env.RPC_URL_MAINNET);
-        const resp = await provider.resolveName(match[1]);
+        const resp = await provider.resolveName(match[2]);
         if(!resp){
             await bot.sendMessage(
                 msg.chat.id, 
