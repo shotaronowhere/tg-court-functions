@@ -1,4 +1,9 @@
 {
+    "lang_support": {
+        "en": "English",
+        "fr": "Français",
+        "es": "Español"
+    },
     "bot": {
         "names":{
             "en": "Hermes | The Kleros Messenger",

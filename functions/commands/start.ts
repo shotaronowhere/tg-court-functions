@@ -11,8 +11,8 @@ for (const lang in commands.start){
     regexps.push(new RegExp(`\/${commands.start[lang as keyof typeof commands.start]}`));
 }
 
-const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
-    await bot.sendMessage(msg.from?.id!, start[msg.from?.language_code as keyof typeof start]);
+const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: string) => {
+    await bot.sendMessage(msg.from?.id!, start[lang_code as keyof typeof start]);
     return;
 }
 

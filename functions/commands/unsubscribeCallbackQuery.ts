@@ -7,7 +7,7 @@ import { unsubscribe } from "../../assets/multilang.json";
  */
 let regexps: RegExp[] = [];
 
-const callback = async (bot: TelegramBot, callback_query: TelegramBot.CallbackQuery) => {
+const callback = async (bot: TelegramBot, callback_query: TelegramBot.CallbackQuery, lang_code: string) => {
     
     console.log(callback_query);
 
@@ -24,7 +24,7 @@ const callback = async (bot: TelegramBot, callback_query: TelegramBot.CallbackQu
 
     await bot.sendMessage(
         callback_query.message?.chat?.id!,
-        unsubscribe.success[callback_query.message?.from?.language_code as keyof typeof unsubscribe.success]
+        unsubscribe.success[lang_code as keyof typeof unsubscribe.success]
     );
 
     await bot.deleteMessage(callback_query.message?.chat?.id!, callback_query.message?.message_id!);

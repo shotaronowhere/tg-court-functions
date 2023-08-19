@@ -11,7 +11,7 @@ let regexps: RegExp[] = [];
 for (const lang in commands.unsubscribe){
     regexps.push(new RegExp(`\/${commands.unsubscribe[lang as keyof typeof commands.unsubscribe]}`));
 }
-const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
+const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: string) => {
 
     const jurors = await notificationSystem
     .from(`tg-notifications-hermes`)
@@ -23,7 +23,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     if (!jurors?.data){
         await bot.sendMessage(
             msg.chat.id,
-            unsubscribe.not_found[msg.from?.language_code as keyof typeof unsubscribe.not_found]
+            unsubscribe.not_found[lang_code as keyof typeof unsubscribe.not_found]
         );
         return;
     }
@@ -43,14 +43,14 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
 
     subscriptions.push(
         [{
-            text: unsubscribe.cancel[msg.from?.language_code as keyof typeof unsubscribe.cancel],
+            text: unsubscribe.cancel[lang_code as keyof typeof unsubscribe.cancel],
             callback_data: 'cancel'
         }]
     );
 
     await bot.sendMessage(
         msg.chat.id, 
-        unsubscribe.select[msg.from?.language_code as keyof typeof unsubscribe.select],
+        unsubscribe.select[lang_code as keyof typeof unsubscribe.select],
         {
             parse_mode: 'Markdown',
             reply_markup: {inline_keyboard: subscriptions}

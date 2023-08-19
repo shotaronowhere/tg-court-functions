@@ -5,6 +5,7 @@ import * as subscribe from "./commands/subscribe";
 import * as unsubscribe from "./commands/unsubscribe";
 import * as unsubscribeCallbackQuery from "./commands/unsubscribeCallbackQuery";
 import * as start from "./commands/start";
+import { lang_support } from "../assets/multilang.json";
 
 const { FUNCTION_SECRET, BOT_TOKEN } = process.env
 const bot = new TelegramBot(BOT_TOKEN, {polling: false});  
@@ -37,18 +38,22 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         }
 
         let msg = json?.message as TelegramBot.Message;
-        const callback_query = json?.callback_query as TelegramBot.CallbackQuery;
+        let callback_query = json?.callback_query as TelegramBot.CallbackQuery;
         if (callback_query)
             msg = callback_query.message as TelegramBot.Message;
 
-            if(!msg || !msg.from?.id || !msg.text || msg.chat.type !== "private"){
-                console.error("Invalid or no message found in body.")
-                // avoid Telegram API retry by sending OK status
-                return { statusCode: StatusCodes.OK };
-            }
+        if(!msg || !msg.from?.id || !msg.text || msg.chat.type !== "private"){
+            console.error("Invalid or no message found in body.")
+            // avoid Telegram API retry by sending OK status
+            return { statusCode: StatusCodes.OK };
+        }
+
+        let lang_code = msg?.from?.language_code!
+        if (!lang_support[lang_code as keyof typeof lang_support])
+            lang_code = "en";
 
         if (callback_query){
-            await unsubscribeCallbackQuery.callback(bot as any, callback_query);
+            await unsubscribeCallbackQuery.callback(bot as any, callback_query, lang_code);
             return { statusCode: StatusCodes.OK };
         }
 
@@ -64,7 +69,7 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         for (const command of commands){
             for (const regexp of command.regexps){
                 if (regexp.test(msg.text)){
-                    await command.callback(bot, msg);
+                    await command.callback(bot, msg, lang_code);
                     return { statusCode: StatusCodes.OK };
                 }
             }

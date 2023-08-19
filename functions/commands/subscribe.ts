@@ -17,13 +17,13 @@ for (const lang in commands.subscribe){
 const regexpFull = /^\/(.+) (.+)/;
 const max_subscriptions = 10;
 
-const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
+const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: string) => {
     const match = msg.text!.match(regexpFull);
     console.log(match)
     if (!match){
         await bot.sendMessage(
             msg.chat.id, 
-            subscribe.no_match[msg.from?.language_code as keyof typeof subscribe.no_match],
+            subscribe.no_match[lang_code as keyof typeof subscribe.no_match],
             {parse_mode: "Markdown"}
         );
         return;
@@ -35,7 +35,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
         if(!isAddress(match[1])){
             await bot.sendMessage(
                 msg.chat.id, 
-                subscribe.not_address[msg.from?.language_code as keyof typeof subscribe.not_address]
+                subscribe.not_address[lang_code as keyof typeof subscribe.not_address]
             );
             return;
         }
@@ -46,7 +46,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
         if(!resp){
             await bot.sendMessage(
                 msg.chat.id, 
-                subscribe.not_ens[msg.from?.language_code as keyof typeof subscribe.not_ens]
+                subscribe.not_ens[lang_code as keyof typeof subscribe.not_ens]
             );
             return;
         } 
@@ -54,7 +54,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     } else {
         await bot.sendMessage(
             msg.chat.id, 
-            subscribe.invalid[msg.from?.language_code as keyof typeof subscribe.invalid],
+            subscribe.invalid[lang_code as keyof typeof subscribe.invalid],
             {parse_mode: "Markdown"}
         );
         return;
@@ -71,14 +71,14 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     if (count.count! > max_subscriptions){
         await bot.sendMessage(
             msg.chat.id, 
-            subscribe.max_subs[msg.from?.language_code as keyof typeof subscribe.max_subs]
+            subscribe.max_subs[lang_code as keyof typeof subscribe.max_subs]
         );
         return;
     }
 
     await bot.sendMessage(
         msg.chat.id, 
-        subscribe.thankyou[msg.from?.language_code as keyof typeof subscribe.thankyou]
+        subscribe.thankyou[lang_code as keyof typeof subscribe.thankyou]
     );
 
     await notificationSystem
