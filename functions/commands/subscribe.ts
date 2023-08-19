@@ -60,7 +60,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
     }
 
     const count = await notificationSystem
-        .from(`tg-notifications-hermes`)
+        .from(`tg-juror-subscriptions`)
         .select("*", { count: 'exact', head: true })
         .eq("tg_user_id", msg.from?.id);
 
@@ -81,7 +81,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
     );
 
     await notificationSystem
-        .from(`tg-notifications-hermes`)
+        .from(`tg-juror-subscriptions`)
         .upsert({tg_user_id: msg.from?.id, juror_address: address});
 
     return;

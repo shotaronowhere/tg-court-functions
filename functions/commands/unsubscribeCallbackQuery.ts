@@ -15,7 +15,7 @@ const callback = async (bot: TelegramBot, callback_query: TelegramBot.CallbackQu
     }
 
     await notificationSystem
-        .from(`tg-notifications-hermes`)
+        .from(`tg-juror-subscriptions`)
         .delete()
         .eq('tg_user_id', callback_query.message?.chat?.id!)
         .eq('juror_address', callback_query.data);

@@ -14,11 +14,9 @@ for (const lang in commands.unsubscribe){
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: string) => {
 
     const jurors = await notificationSystem
-    .from(`tg-notifications-hermes`)
+    .from(`tg-juror-subscriptions`)
     .select("juror_address")
     .eq('tg_user_id', msg.from?.id);
-
-    console.log(jurors);
 
     if (!jurors?.data || jurors?.data?.length == 0){
         await bot.sendMessage(
