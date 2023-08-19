@@ -20,7 +20,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
 
     console.log(jurors);
 
-    if (!jurors?.data){
+    if (!jurors?.data || jurors?.data?.length == 0){
         await bot.sendMessage(
             msg.chat.id,
             unsubscribe.not_found[lang_code as keyof typeof unsubscribe.not_found]
