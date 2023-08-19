@@ -9,6 +9,11 @@ let regexps: RegExp[] = [];
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message, callback_query: TelegramBot.CallbackQuery) => {
     
+    if (callback_query.data == "cancel"){
+        await bot.deleteMessage(msg.chat.id, msg.message_id);
+        return;
+    }
+
     await notificationSystem
         .from(`tg-notifications-hermes`)
         .delete()
