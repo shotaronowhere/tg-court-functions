@@ -47,5 +47,42 @@
                 }
             ]
         }
+    },
+    "start": {
+        "en": "Hi! My name is Hermes, the Kleros Messenger. I deliver jury summons from the Kleros court.\n\n/subscribe or /unsubscribe at anytime.",
+        "fr": "Bonjour, je m'appelle Hermès, le messager de Kleros. Je délivre les convocations des jurés du tribunal de Kleros.\n\n /souscrire ou me /desinscrire à tout moment.",
+        "es": "Hola, me llamo Hermes, el Mensajero de Kleros. Entrego citaciones de jurado del tribunal de Kleros.\n\nSuscríbete o /date de baja en cualquier momento."
+    },
+    "subscribe": {
+        "no_match": {
+            "en": "Please specify a juror, `/subscribe <0xa1f...2fa or juror.eth>`.",
+            "fr": "Veuillez indiquer un juré, `/souscrire <0xa1f...2fa ou juror.eth>`.",
+            "es": "Por favor, especifique un jurado, `/suscribase <0xa1f...2fa o juror.eth>`."
+        },
+        "not_address": {
+            "en": "Not a valid address.",
+            "fr": "Adresse invalide.",
+            "es": "Dirección no válida."
+        },
+        "not_ens": {
+            "en": "Not a valid ENS name.",
+            "fr": "Nom ENS invalide.",
+            "es": "Nombre ENS no válido."
+        },
+        "max_subs": {
+            "en": "You already have the max # of subscriptions.",
+            "fr": "Vous avez déjà le nombre maximum d'abonnements.",
+            "es": "Ya tienes el número máximo de suscripciones."
+        },
+        "thankyou": {
+            "en": "Thank you! I will notify you when a dispute is created for this juror.",
+            "fr": "Merci! Je vous préviendrai lorsqu'un litige sera créé pour ce juré.",
+            "es": "¡Gracias! Te avisaré cuando se cree una disputa para este jurado."
+        }
+    },
+    "unsubscribe": {
+        "en": "You are unsubscribed.",
+        "fr": "Vous êtes désinscrit.",
+        "es": "Te has dado de baja."
     }
 }

@@ -1,4 +1,5 @@
 import * as TelegramBot from "node-telegram-bot-api";
+import { start } from "../../assets/multilang.json";
 
 /*
  * /start
@@ -6,8 +7,7 @@ import * as TelegramBot from "node-telegram-bot-api";
 const regexp = /\/start/
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
-    await bot.sendMessage(msg.from?.id!,
-        "Hi! My name is Hermes, the Kleros Messenger. I deliver jury summons from the Kleros court.\n\n/subscribe or /unsubscribe at anytime.");
+    await bot.sendMessage(msg.from?.id!, start[msg.from?.language_code as keyof typeof start]);
     return;
 }
 
