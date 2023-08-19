@@ -26,6 +26,8 @@ const callback = async (bot: TelegramBot, callback_query: TelegramBot.CallbackQu
         callback_query.message?.chat?.id!,
         unsubscribe.success[callback_query.message?.from?.language_code as keyof typeof unsubscribe.success]
     );
+
+    await bot.deleteMessage(callback_query.message?.chat?.id!, callback_query.message?.message_id!);
     return;
 }
 
