@@ -35,10 +35,10 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
         {reply_markup: {inline_keyboard: subscriptions}}
     );
     
-    await notificationSystem
+    /*await notificationSystem
         .from(`tg-notifications-hermes`)
         .delete()
-        .eq('tg_user_id', msg.from?.id);
+        .eq('tg_user_id', msg.from?.id);*/
     return;
 }
 
