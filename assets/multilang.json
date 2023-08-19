@@ -73,7 +73,7 @@
     "start": {
         "en": "Hi! My name is Hermes, the Kleros Messenger. I deliver jury summons from the Kleros court.\n\n/subscribe or /unsubscribe at anytime.",
         "fr": "Bonjour, je m'appelle Hermès, le messager de Kleros. Je délivre les convocations des jurés du tribunal de Kleros.\n\n /souscrire ou me /desinscrire à tout moment.",
-        "es": "Hola, me llamo Hermes, el Mensajero de Kleros. Entrego citaciones de jurado del tribunal de Kleros.\n\nSuscríbete o /date de baja en cualquier momento."
+        "es": "Hola, me llamo Hermes, el Mensajero de Kleros. Entrego citaciones de jurado del tribunal de Kleros.\n/suscribase o /cancelar de baja en cualquier momento."
     },
     "subscribe": {
         "no_match": {
