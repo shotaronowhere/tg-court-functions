@@ -23,8 +23,8 @@ const callback = async (bot: TelegramBot, callback_query: TelegramBot.CallbackQu
         .eq('juror_address', callback_query.data);
 
     await bot.sendMessage(
-        msg.chat.id,
-        unsubscribe.success[msg.from?.language_code as keyof typeof unsubscribe.success]
+        callback_query.message?.chat?.id!,
+        unsubscribe.success[callback_query.message?.from?.language_code as keyof typeof unsubscribe.success]
     );
     return;
 }
