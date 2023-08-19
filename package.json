@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "bot-init": "npx ts-node ./config/botInit.ts"
+  },
   "dependencies": {
     "@netlify/functions": "^1.6.0",
     "@supabase/supabase-js": "^2.32.0",

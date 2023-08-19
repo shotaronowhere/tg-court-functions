@@ -76,7 +76,7 @@ const initialize = async () => {
             `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook`, 
             {
                 url: WEB_HOOK_URL,
-                allowed_updates : ["message"],
+                allowed_updates : ["message", "callback_query"],
                 drop_pending_updates : true,
                 secret_token: FUNCTION_SECRET
             })

@@ -30,6 +30,7 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         
         const json = JSON.parse(event.body) as TelegramBot.Update;
 
+        console.log(event)
         if (!json){
             console.error("JSON parsing error.")
             // avoid Telegram API retry by sending OK status
