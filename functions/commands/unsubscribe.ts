@@ -8,10 +8,33 @@ import { unsubscribe } from "../../assets/multilang.json";
 const regexp = /\/unsubscribe/
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
+
+    const jurors = await notificationSystem
+    .from(`tg-notifications-hermes`)
+    .select("juror_address")
+    .eq('tg_user_id', msg.from?.id);
+
+    console.log(jurors);
+
+    if (!jurors?.data)
+        return;
+
+    let subscriptions = []
+
+    for (const juror of jurors?.data!) {
+        subscriptions.push(
+            [{
+                text: juror.juror_address
+            }]
+        );
+    }
+
     await bot.sendMessage(
         msg.chat.id, 
-        unsubscribe[msg.from?.language_code as keyof typeof unsubscribe]
+        "which juror do you want to unsubscribe?",
+        {reply_markup: {inline_keyboard: subscriptions}}
     );
+    
     await notificationSystem
         .from(`tg-notifications-hermes`)
         .delete()
