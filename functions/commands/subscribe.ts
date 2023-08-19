@@ -38,7 +38,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
             );
             return;
         }
-        address = getAddress(match[1]);
+        address = getAddress(match[2]);
     } else if(match[2].endsWith(".eth")){
         const provider = new JsonRpcProvider(process.env.RPC_URL_MAINNET);
         const resp = await provider.resolveName(match[2]);
