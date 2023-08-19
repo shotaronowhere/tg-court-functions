@@ -39,12 +39,12 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         const msg = json?.message as TelegramBot.Message;
         const callback_query = json?.callback_query as TelegramBot.CallbackQuery;
 
+        console.log(json)
+
         if (callback_query){
             await unsubscribeCallbackQuery.callback(bot as any, msg, callback_query);
             return { statusCode: StatusCodes.OK };
         }
-
-
 
         if(!msg || !msg.from?.id || !msg.text || msg.chat.type !== "private"){
             console.error("Invalid or no message found in body.")
