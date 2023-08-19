@@ -19,7 +19,6 @@ const max_subscriptions = 10;
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: string) => {
     const match = msg.text!.match(regexpFull);
-    console.log(match)
     if (!match){
         await bot.sendMessage(
             msg.chat.id, 
@@ -31,8 +30,8 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
 
     let address: string | undefined = undefined;
 
-    if(match[1].startsWith("0x")){
-        if(!isAddress(match[1])){
+    if(match[2].startsWith("0x")){
+        if(!isAddress(match[2])){
             await bot.sendMessage(
                 msg.chat.id, 
                 subscribe.not_address[lang_code as keyof typeof subscribe.not_address]
@@ -40,7 +39,7 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
             return;
         }
         address = getAddress(match[1]);
-    } else if(match[1].endsWith(".eth")){
+    } else if(match[2].endsWith(".eth")){
         const provider = new JsonRpcProvider(process.env.RPC_URL_MAINNET);
         const resp = await provider.resolveName(match[1]);
         if(!resp){
