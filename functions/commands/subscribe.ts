@@ -2,16 +2,24 @@ import * as TelegramBot from "node-telegram-bot-api";
 import { isAddress, getAddress, JsonRpcProvider } from "ethers";
 import { notificationSystem } from "../../config/supabase";
 import { subscribe } from "../../assets/multilang.json";
+import { commands } from "../../assets/multilang.json";
 
 /*
  * /subscribe
  */
-const regexp = /^\/subscribe/;
-const regexpFull = /^\/subscribe (.+)/;
+
+let regexps: RegExp[] = [];
+
+for (const lang in commands.subscribe){
+    regexps.push(new RegExp(`\/${commands.subscribe[lang as keyof typeof commands.subscribe]}`));
+}
+
+const regexpFull = /^\/(.+) (.+)/;
 const max_subscriptions = 10;
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     const match = msg.text!.match(regexpFull);
+    console.log(match)
     if (!match){
         await bot.sendMessage(
             msg.chat.id, 
@@ -80,4 +88,4 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     return;
 }
 
-export {regexp, callback};
+export {regexps, callback};

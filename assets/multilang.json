@@ -48,6 +48,23 @@
             ]
         }
     },
+    "commands": {
+        "start": {
+            "en": "start",
+            "fr": "démarrer",
+            "es": "comenzar"
+        },
+        "subscribe": {
+            "en": "subscribe",
+            "fr": "souscrire",
+            "es": "suscribase"
+        },
+        "unsubscribe": {
+            "en": "unsubscribe",
+            "fr": "desinscrire",
+            "es": "cancelar"
+        }
+    },
     "start": {
         "en": "Hi! My name is Hermes, the Kleros Messenger. I deliver jury summons from the Kleros court.\n\n/subscribe or /unsubscribe at anytime.",
         "fr": "Bonjour, je m'appelle Hermès, le messager de Kleros. Je délivre les convocations des jurés du tribunal de Kleros.\n\n /souscrire ou me /desinscrire à tout moment.",
@@ -81,8 +98,25 @@
         }
     },
     "unsubscribe": {
-        "en": "You are unsubscribed.",
-        "fr": "Vous êtes désinscrit.",
-        "es": "Te has dado de baja."
+        "success": {
+            "en": "You are unsubscribed.",
+            "fr": "Vous êtes désinscrit.",
+            "es": "Te has dado de baja."
+        },
+        "not_found": {
+            "en": "No subscriptions found.",
+            "fr": "Aucun abonnement trouvé.",
+            "es": "No se encontraron suscripciones."
+        },
+        "cancel": {
+            "en": "Cancel",
+            "fr": "Annuler",
+            "es": "Cancelar"
+        },
+        "select": {
+            "en": "Select a juror to unsubscribe from.",
+            "fr": "Sélectionnez un juré auquel vous désabonner.",
+            "es": "Seleccione un jurado para darse de baja."
+        }
     }
 }

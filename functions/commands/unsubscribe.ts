@@ -1,12 +1,16 @@
 import * as TelegramBot from "node-telegram-bot-api";
 import { notificationSystem } from "../../config/supabase";
 import { unsubscribe } from "../../assets/multilang.json";
+import { commands } from "../../assets/multilang.json";
 
 /*
  * /start
  */
-const regexp = /\/unsubscribe/
+let regexps: RegExp[] = [];
 
+for (const lang in commands.unsubscribe){
+    regexps.push(new RegExp(`\/${commands.unsubscribe[lang as keyof typeof commands.unsubscribe]}`));
+}
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
 
     const jurors = await notificationSystem
@@ -16,8 +20,13 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
 
     console.log(jurors);
 
-    if (!jurors?.data)
+    if (!jurors?.data){
+        await bot.sendMessage(
+            msg.chat.id,
+            unsubscribe.not_found[msg.from?.language_code as keyof typeof unsubscribe.not_found]
+        );
         return;
+    }
 
     let subscriptions = []
 
@@ -34,25 +43,21 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
 
     subscriptions.push(
         [{
-            text: 'cancel',
+            text: unsubscribe.cancel[msg.from?.language_code as keyof typeof unsubscribe.cancel],
             callback_data: 'cancel'
         }]
     );
 
     await bot.sendMessage(
         msg.chat.id, 
-        "which juror do you want to unsubscribe?",
+        unsubscribe.select[msg.from?.language_code as keyof typeof unsubscribe.select],
         {
             parse_mode: 'Markdown',
             reply_markup: {inline_keyboard: subscriptions}
         }
     );
     
-    /*await notificationSystem
-        .from(`tg-notifications-hermes`)
-        .delete()
-        .eq('tg_user_id', msg.from?.id);*/
     return;
 }
 
-export {regexp, callback};
+export {regexps, callback};

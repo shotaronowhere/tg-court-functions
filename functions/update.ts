@@ -3,6 +3,7 @@ import TelegramBot = require("node-telegram-bot-api");
 import NodeCache = require( "node-cache" );
 import * as subscribe from "./commands/subscribe";
 import * as unsubscribe from "./commands/unsubscribe";
+import * as unsubscribeCallbackQuery from "./commands/unsubscribeCallbackQuery";
 import * as start from "./commands/start";
 
 const { FUNCTION_SECRET, BOT_TOKEN } = process.env
@@ -14,7 +15,7 @@ const bot = new TelegramBot(BOT_TOKEN, {polling: false});
 const rateLimit = new NodeCache( { stdTTL: 60, checkperiod: 30 } );
 const throttleCount = 10;
 
-const commands: {regexp: RegExp, callback: any}[] = [
+const commands: {regexps: RegExp[], callback: any}[] = [
     start,
     subscribe,
     unsubscribe
@@ -27,9 +28,23 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
             return {statusCode: StatusCodes.UNAUTHORIZED};
         }
         
-        const json = JSON.parse(event.body)
-        console.log(json)
+        const json = JSON.parse(event.body) as TelegramBot.Update;
+
+        if (!json){
+            console.error("JSON parsing error.")
+            // avoid Telegram API retry by sending OK status
+            return { statusCode: StatusCodes.OK };
+        }
+
         const msg = json?.message as TelegramBot.Message;
+        const callback_query = json?.callback_query as TelegramBot.CallbackQuery;
+
+        if (callback_query){
+            await unsubscribeCallbackQuery.callback(bot as any, msg, callback_query);
+            return { statusCode: StatusCodes.OK };
+        }
+
+
 
         if(!msg || !msg.from?.id || !msg.text || msg.chat.type !== "private"){
             console.error("Invalid or no message found in body.")
@@ -47,9 +62,11 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
         }
 
         for (const command of commands){
-            if (command.regexp.test(msg.text)){
-                await command.callback(bot, msg);
-                return { statusCode: StatusCodes.OK };
+            for (const regexp of command.regexps){
+                if (regexp.test(msg.text)){
+                    await command.callback(bot, msg);
+                    return { statusCode: StatusCodes.OK };
+                }
             }
         }
 
