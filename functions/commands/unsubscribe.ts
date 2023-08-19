@@ -24,7 +24,8 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message) => {
     for (const juror of jurors?.data!) {
         subscriptions.push(
             [{
-                text: juror.juror_address
+                text: juror.juror_address,
+                callback_data: juror.juror_address
             }]
         );
     }
