@@ -1,0 +1,16 @@
+overwrite: true
+generates:
+  ./generated/kleros-display-graphql.ts:
+    schema: "https://api.thegraph.com/subgraphs/name/andreimvp/kleros-display"
+    documents: "graphql/klerosdisplay/*.gql"
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-graphql-request"
+  ./generated/kleros-board-graphql.ts:
+    schema: "https://api.thegraph.com/subgraphs/name/klerosboard/klerosboard-mainnet"
+    documents: "graphql/klerosboard/*.gql"
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-graphql-request"

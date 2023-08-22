@@ -4,18 +4,30 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "bot-init": "npx ts-node ./config/botInit.ts"
+    "dev": "netlify dev",
+    "bot-init": "npx ts-node ./config/botInit.ts",
+    "gql": "graphql-codegen --config codegen.yml",
+    "postinstall": "yarn gql"
   },
   "dependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.1",
+    "@graphql-codegen/typescript-graphql-request": "^5.0.0",
+    "@graphql-codegen/typescript-operations": "^4.0.1",
+    "@logtail/node": "^0.4.6",
     "@netlify/functions": "^1.6.0",
     "@supabase/supabase-js": "^2.32.0",
     "axios": "^1.4.0",
     "dotenv": "^16.3.1",
     "ethers": "^6.7.0",
+    "graphql": "^16.8.0",
+    "graphql-request": "^6.1.0",
     "http-status-codes": "^2.2.0",
     "netlify-cli": "^15.11.0",
     "node-cache": "^5.1.2",
-    "node-telegram-bot-api": "^0.61.0"
+    "node-telegram-bot-api": "^0.61.0",
+    "p-queue": "^7.3.4",
+    "viem": "^1.6.7"
   },
   "devDependencies": {
     "@types/node-telegram-bot-api": "^0.61.7"
