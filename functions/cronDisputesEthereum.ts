@@ -96,4 +96,4 @@ const handler: Handler = async () => {
 
 };
 
-module.exports.handler = schedule("* * * * *", handler);
+module.exports.handler = schedule("@hourly", handler);

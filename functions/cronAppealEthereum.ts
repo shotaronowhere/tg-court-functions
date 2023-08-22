@@ -145,4 +145,4 @@ Appeals can be [requested]${isReality? `(https://resolve.kleros.io/cases/${appea
 
 };
 
-module.exports.handler = schedule("* * * * *", handler);
+module.exports.handler = schedule("@hourly", handler);

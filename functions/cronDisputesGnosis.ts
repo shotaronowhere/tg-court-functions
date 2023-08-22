@@ -97,6 +97,6 @@ const handler: Handler = async () => {
 
 };
 
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-module.exports.handler = schedule("* * * * *", handler);
+module.exports.handler = schedule("@hourly", handler);
