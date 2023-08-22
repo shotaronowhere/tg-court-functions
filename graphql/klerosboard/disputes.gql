@@ -1,0 +1,15 @@
+query NewDisputes($disputeID: BigInt!){
+    disputes(first: 1000, where: {disputeID_gt: $disputeID}, orderBy: disputeID) {
+        startTime
+        disputeID
+        arbitrable {
+            id
+        }
+        subcourtID{
+            id
+            policy{
+                policy
+            }   
+        }
+    }
+}

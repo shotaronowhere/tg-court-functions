@@ -1,0 +1,10 @@
+query AppealableDisputes($timestamp: BigInt!){
+  disputes(first: 1000, where: {period: appeal, lastPeriodChange_gt: $timestamp}, orderBy: lastPeriodChange) {
+    lastPeriodChange
+    disputeID
+    currentRulling
+    arbitrable {
+        id
+    }
+  }
+}
