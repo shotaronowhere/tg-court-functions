@@ -1,4 +1,5 @@
 import { cronDispute } from "./util/cronDispute";
+import { cronDispute } from "./util/cronDispute";
 import { Handler, schedule } from "@netlify/functions";
 
 const handler: Handler = async () => {
