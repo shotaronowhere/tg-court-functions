@@ -15,7 +15,7 @@ for (const lang in commands.subscribe){
 }
 
 const regexpFull = /^\/(.+) (.+)/;
-const max_subscriptions = 10;
+const max_subscriptions = 3;
 
 const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: string) => {
     const match = msg.text!.match(regexpFull);
