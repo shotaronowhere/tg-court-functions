@@ -4,10 +4,13 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "netlify dev",
-    "bot-init": "npx ts-node ./config/botInit.ts",
-    "gql": "graphql-codegen --config codegen.yml",
-    "postinstall": "yarn gql"
+    "dev": "netlify dev --no-open",
+    "dev:invoke-update": "netlify dev:exec -- netlify functions:invoke update --port 8888",
+    "bot-init": "yarn ts-node ./config/botInit.ts",
+    "generate": "yarn generate:gql && yarn generate:supabase",
+    "generate:gql": "graphql-codegen --config codegen.yml",
+    "generate:supabase": "./scripts/generateSupabaseTypes.sh",
+    "postinstall": "yarn generate"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^5.0.0",
@@ -23,13 +26,20 @@
     "graphql": "^16.8.0",
     "graphql-request": "^6.1.0",
     "http-status-codes": "^2.2.0",
-    "netlify-cli": "^15.11.0",
     "node-cache": "^5.1.2",
     "node-telegram-bot-api": "^0.61.0",
     "p-queue": "^7.3.4",
     "viem": "^1.6.7"
   },
   "devDependencies": {
-    "@types/node-telegram-bot-api": "^0.61.7"
+    "@types/node-telegram-bot-api": "^0.61.7",
+    "supabase": "^1.88.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  },
+  "packageManager": "yarn@1.22.19",
+  "volta": {
+    "node": "16.20.2",
+    "yarn": "1.22.19"
   }
 }
