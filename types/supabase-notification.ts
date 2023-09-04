@@ -30,6 +30,39 @@ export interface Database {
         }
         Relationships: []
       }
+      "discord-broadcast": {
+        Row: {
+          channel: string | null
+          index: string
+          message: string
+          network: number
+          processed: boolean | null
+          status: string | null
+          TTL: string | null
+          tx: string
+        }
+        Insert: {
+          channel?: string | null
+          index: string
+          message: string
+          network: number
+          processed?: boolean | null
+          status?: string | null
+          TTL?: string | null
+          tx: string
+        }
+        Update: {
+          channel?: string | null
+          index?: string
+          message?: string
+          network?: number
+          processed?: boolean | null
+          status?: string | null
+          TTL?: string | null
+          tx?: string
+        }
+        Relationships: []
+      }
       "hermes-tg-counters": {
         Row: {
           bot_name: string

@@ -1,5 +1,8 @@
+import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { DatalakeDatabase, NotificationDatabase } from "../types";
+
+dotenv.config();
 
 export const datalake = createClient<DatalakeDatabase>(
   process.env.DATALAKE_URL,

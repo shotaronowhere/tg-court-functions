@@ -2,6 +2,7 @@ import { GraphQLClient } from "graphql-request";
 import { gnosis, mainnet } from "viem/chains";
 import { Sdk as KBSdk, getSdk as getKBSdk} from "../generated/kleros-board-graphql";
 import { Sdk as KDSdk, getSdk as getKDSdk} from "../generated/kleros-display-graphql";
+import { Supported } from "../types";
 
 const subgraphUrlKD = {
   [mainnet.id]:
