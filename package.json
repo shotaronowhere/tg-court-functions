@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "netlify dev --no-open",
     "dev:invoke-update": "netlify dev:exec -- netlify functions:invoke update --port 8888",
+    "dev:notify": "NODE_NO_WARNINGS=1 NODE_OPTIONS=--experimental-fetch yarn ts-node functions/util/notify.ts",
+    "dev:draw-v2": "NODE_NO_WARNINGS=1 NODE_OPTIONS=--experimental-fetch yarn ts-node functions/util/v2/draw.ts",
     "bot-init": "yarn ts-node ./config/botInit.ts",
     "generate": "yarn generate:gql && yarn generate:supabase",
     "generate:gql": "graphql-codegen --config codegen.yml",
