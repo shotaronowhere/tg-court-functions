@@ -41,7 +41,7 @@ curl -s -X POST http://localhost:8888/.netlify/functions/update -H "Accept: appl
 #### Bot Init
 Set this environment variable, if needed extrapolate $USER 
 ```bash
-$ export WEB_HOOK_URL=https://dev-$USER--tg-court-functions.netlify.live/.netlify/functions/update
+$ export WEB_HOOK_URL=https://dev-$USER--kleros-tg-court-notifications.netlify.live/.netlify/functions/update
 
 $ yarn bot-init
 Setting multilang bot info . . .
