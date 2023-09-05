@@ -11,8 +11,7 @@
     "bot-init": "yarn ts-node ./config/botInit.ts",
     "generate": "yarn generate:gql && yarn generate:supabase",
     "generate:gql": "graphql-codegen --config codegen.yml",
-    "generate:supabase": "./scripts/generateSupabaseTypes.sh",
-    "postinstall": "yarn generate"
+    "generate:supabase": "./scripts/generateSupabaseTypes.sh"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^5.0.0",
