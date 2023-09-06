@@ -72,13 +72,18 @@ const formatMessage = (draw: CountedDraw) => {
 };
 
 const getDrawsByAddress = async (fromBlockNumber: bigint) => {
-    const arbitrumGoerli2: Chain = {
-        ...arbitrumGoerli,
-        rpcUrls: {
-            ...arbitrumGoerli.rpcUrls,
-            default: { http: ["https://arb-goerli.g.alchemy.com/v2/demo"] },
-        },
-    };
+    const arbitrumGoerli2: Chain = process.env
+        .PRIVATE_RPC_ENDPOINT_ARBITRUMGOERLI
+        ? {
+              ...arbitrumGoerli,
+              rpcUrls: {
+                  ...arbitrumGoerli.rpcUrls,
+                  default: {
+                      http: [process.env.PRIVATE_RPC_ENDPOINT_ARBITRUMGOERLI],
+                  },
+              },
+          }
+        : arbitrumGoerli;
 
     const client = createPublicClient({
         chain: arbitrumGoerli2,

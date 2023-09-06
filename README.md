@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/1be80d13-106a-42ea-b891-04792049350f/deploy-status)](https://app.netlify.com/sites/kleros-tg-court-notifications/deploys)
+
 # tg-court-functions
 
 Netlify Functions for Hermes, the Kleros Messenger. A god who delivers jury duty summons sent from the Kleros Court.
