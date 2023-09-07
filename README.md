@@ -35,9 +35,9 @@ curl -s -X POST http://localhost:8888/.netlify/functions/update -H "Accept: appl
 
 ### Preparation
 
-#### Retrieve your Telegram user chatId
-1. Sending a message to your bot on Telegram
-2. Visiting `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates`, find the corresponding message and retrieve the chatId
+#### Create a Notification Channel
+1. Create a channel
+2. Send a message to the channel and forward the message to the @userinfobot to retrieve the channel id.
 3. Set the value to the environment variable `$NOTIFICATION_CHANNEL`
 
 #### Bot Init
