@@ -8,10 +8,11 @@
     "dev:invoke-update": "netlify dev:exec -- netlify functions:invoke update --port 8888",
     "dev:notify": "NODE_NO_WARNINGS=1 NODE_OPTIONS=--experimental-fetch yarn ts-node functions/util/notify.ts",
     "dev:draw-v2": "NODE_NO_WARNINGS=1 NODE_OPTIONS=--experimental-fetch yarn ts-node functions/util/v2/draw.ts",
-    "bot-init": "yarn ts-node ./config/botInit.ts",
+    "bot-init": "ts-node ./config/botInit.ts",
     "generate": "yarn generate:gql && yarn generate:supabase",
     "generate:gql": "graphql-codegen --config codegen.yml",
-    "generate:supabase": "./scripts/generateSupabaseTypes.sh"
+    "generate:supabase": "./scripts/generateSupabaseTypes.sh",
+    "postinstall": "yarn generate"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^5.0.0",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@types/node-telegram-bot-api": "^0.61.7",
+    "netlify-cli": "^16.3.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   },
