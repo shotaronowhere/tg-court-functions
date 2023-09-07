@@ -30,18 +30,9 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
 
     let address: string | undefined = undefined;
 
-    if(match[2].startsWith("0x")){
-        if(!isAddress(match[2])){
-            await bot.sendMessage(
-                msg.chat.id, 
-                subscribe.not_address[lang_code as keyof typeof subscribe.not_address]
-            );
-            return;
-        }
-        address = getAddress(match[2]);
-    } else if(match[2].endsWith(".eth")){
+    if(match[2].endsWith(".eth")){
         const provider = new JsonRpcProvider(process.env.RPC_URL_MAINNET);
-        const resp = await provider.resolveName(match[2]);
+        const resp = await provider.resolveName(match[2].toLowerCase());
         if(!resp){
             await bot.sendMessage(
                 msg.chat.id, 
@@ -50,6 +41,15 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
             return;
         } 
         address = resp;
+    } else if (match[2].startsWith("0x")) {
+        if(!isAddress(match[2])){
+            await bot.sendMessage(
+                msg.chat.id, 
+                subscribe.not_address[lang_code as keyof typeof subscribe.not_address]
+            );
+            return;
+        }
+        address = getAddress(match[2]);
     } else {
         await bot.sendMessage(
             msg.chat.id, 
