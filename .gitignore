@@ -1,4 +1,10 @@
 node_modules/*
+
+# Yarn
+.yarn/cache/
+.yarn/install-state.gz
+
+
 # Local Netlify folder
 .netlify
 .env

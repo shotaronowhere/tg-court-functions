@@ -1,6 +1,7 @@
 import axios from "axios";
 import { supportedChainIds, getKBSubgraphData } from "../../../config/subgraph";
 import { NewDisputesQuery } from "../../../generated/kleros-board-graphql";
+import { ArrayElement } from "../../../types";
 import PQueue from 'p-queue';
 const queue = new PQueue({intervalCap: 20, interval: 60000,carryoverConcurrencyCount: true});
 
@@ -17,7 +18,7 @@ export const dispute = async (disputeID: number, chainid: ArrayElement<typeof su
     for(const dispute of NewDisputeData.disputes){
         
         await queue.add(async () => {
-            await formatMessge(dispute, chainid).then(async (msg) => 
+            await formatMessage(dispute, chainid).then(async (msg) => 
                 await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
                     chat_id: process.env.NOTIFICATION_CHANNEL,
                     text: msg,
@@ -34,12 +35,23 @@ export const dispute = async (disputeID: number, chainid: ArrayElement<typeof su
     return disputeID;
 }
 
-const formatMessge = async (dispute: ArrayElement<NewDisputesQuery['disputes']>, chainid: number) => {
-    let res 
-    try{res = await axios.get(`https://ipfs.kleros.io/${dispute.subcourtID.policy?.policy}`)}catch(e){console.log(e)};
+const formatMessage = async (
+    dispute: ArrayElement<NewDisputesQuery["disputes"]>,
+    chainid: number
+) => {
+    let res;
+    try {
+        res = await axios.get(`https://ipfs.kleros.io/${dispute.subcourtID.policy?.policy}`);
+    } catch (e) {
+        console.log(e);
+    }
 
-    return `[Dispute ${dispute.disputeID}](https://court.kleros.io/cases/${dispute.disputeID}) (*${chainid == 1? "mainnet" : "gnosis"}*)!
+    return `[Dispute ${dispute.disputeID}](https://court.kleros.io/cases/${
+        dispute.disputeID
+    }) (*${chainid == 1 ? "mainnet" : "gnosis"}*)!
         
-    Arbitrable: [${dispute.arbitrable.id}](https://${chainid == 1? "ether" : "gnosis"}scan.io/address/${dispute.arbitrable.id})
-    Subcourt: ${res? res.data.name: dispute.subcourtID}`
-}
+    Arbitrable: [${dispute.arbitrable.id}](https://${
+        chainid == 1 ? "ether" : "gnosis"
+    }scan.io/address/${dispute.arbitrable.id})
+    Subcourt: ${res ? res.data.name : dispute.subcourtID}`;
+};

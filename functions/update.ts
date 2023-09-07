@@ -23,6 +23,7 @@ const commands: {regexps: RegExp[], callback: any}[] = [
 ];
 
 exports.handler = async (event: { headers: { [x: string]: string; }; body: string; }) => {
+    console.log("Received event: ", JSON.stringify(event))
     try {
         if (event.headers["x-telegram-bot-api-secret-token"] !== FUNCTION_SECRET){
             console.error("Unauthorized")
@@ -78,6 +79,8 @@ exports.handler = async (event: { headers: { [x: string]: string; }; body: strin
                 }
             }
         }
+
+        return { statusCode: StatusCodes.OK }; // if no command matched
 
     } catch (e) {
         console.error(e);

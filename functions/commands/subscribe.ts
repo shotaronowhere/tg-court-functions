@@ -80,11 +80,11 @@ const callback = async (bot: TelegramBot, msg: TelegramBot.Message, lang_code: s
         subscribe.thankyou[lang_code as keyof typeof subscribe.thankyou]
     );
 
-    await notificationSystem
+    const result = await notificationSystem
         .from(`tg-juror-subscriptions`)
-        .upsert({tg_user_id: msg.from?.id, juror_address: address});
-
-    return;
+        .upsert({tg_user_id: msg.from?.id as number, juror_address: address});
+    
+    console.log("Subscription results: ", JSON.stringify(result));
 }
 
 export {regexps, callback};

@@ -10,7 +10,7 @@ const initialize = async () => {
     
     console.log("Setting multilang bot info . . .")
     for (const lang in bot.names){
-        const name = bot.names[lang as keyof typeof bot.names]
+        const name = bot.names[lang as keyof typeof bot.names] + " (v2)" // TODO: make the suffix a config variable?
         console.log('setting bot name ',lang,name)
         try{
             await axios.post(
