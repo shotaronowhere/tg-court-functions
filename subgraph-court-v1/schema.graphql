@@ -1,0 +1,82 @@
+# KlerosLiquid entities
+enum Period {
+  "Evidence can be submitted. This is also when drawing has to take place."
+  evidence,
+  "Jurors commit a hashed vote. This is skipped for courts without hidden votes."
+  commit,
+  "Jurors reveal/cast their vote depending on whether the court has hidden votes or not."
+  vote, 
+  "The dispute can be appealed."
+  appeal,
+  "Tokens are redistributed and the ruling is executed."
+  execution
+}
+
+type Draw @entity(immutable: true) {
+  id: String!
+  address: Bytes! # address
+  disputeID: Dispute! # String
+  round: BigInt! # uint256
+  blockNumber: BigInt!
+}
+
+type Arbitrable @entity(immutable: true) {
+  id: Bytes!
+  arbitrableHistories: [ArbitrableHistory!]! @derivedFrom(field: "arbitrable")
+}
+
+type ArbitrableHistory @entity(immutable: true) {
+  id: String!
+  arbitrable: Arbitrable! # address
+  metaEvidence:  MetaEvidence!
+  metaEvidenceId: BigInt! # uint256
+}
+
+type MetaEvidence @entity(immutable: true) {
+  id: String!
+  title: String
+  description: String
+  category: String
+  question: String
+  fileURI: String
+  rulingOptions: [RulingOptions!] @derivedFrom(field: "metaEvidence")
+}
+
+type RulingOptions @entity(immutable: true) {
+  id: String!
+  metaEvidence: MetaEvidence!
+  descriptions: [String!]!
+  titles: [String!]!
+}
+
+type Court @entity {
+  id: String!
+  policy: String!
+  name: String
+  description: String
+  summary: String
+  requiredSkills: String
+}
+
+
+type Dispute @entity {
+  id: String!
+  currentRuling: BigInt! # uint256
+  disputeID: BigInt! # uint256
+  metaEvidenceId: BigInt
+  arbitrable: Arbitrable! # address
+  arbitrableHistory: ArbitrableHistory # address
+  period: Period! # uint8
+  periodDeadline: BigInt! # uint256
+  subcourt: Court! # uint256
+  lastPeriodChangeBlock: BigInt! # uint256
+  lastPeriodChangeTimestamp: BigInt! # uint256
+  draws: [Draw!]! @derivedFrom(field: "disputeID")
+}
+
+type AppealDecision @entity(immutable: true) {
+  id: Bytes!
+  disputeID: BigInt! # uint256
+  arbitrable: Bytes! # address
+  blockNumber: BigInt!
+}
