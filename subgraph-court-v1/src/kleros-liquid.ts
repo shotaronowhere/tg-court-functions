@@ -3,13 +3,19 @@ import {
   NewPeriod as NewPeriodEvent,
   DisputeCreation as DisputeCreationEvent,
   AppealDecision as AppealDecisionEvent,
+  StakeSet as StakeSetEvent,
+  ChangeSubcourtTimesPerPeriodCall,
+  CreateSubcourtCall,
   KlerosLiquid
 } from "../generated/KlerosLiquid/KlerosLiquid"
 import {
+  Court,
   Draw,
   Dispute,
   AppealDecision,
-  Arbitrable
+  Arbitrable,
+  CourtCounter,
+  UnstakingInactivity
 } from "../generated/schema"
 import {
   log,
@@ -18,10 +24,59 @@ import {
 } from "@graphprotocol/graph-ts";
 import { Arbitrable as ArbitrableContract } from "../generated/templates";
 
+export function ChangeSubcourtTimesPerPeriodCallHandler(call: ChangeSubcourtTimesPerPeriodCall): void {
+  const subcourt = call.inputs._subcourtID.toString();
+  let court = Court.load(subcourt)
+
+  if (!court) {
+    log.error("Court {} does not exist", [subcourt]);
+    return;
+  }
+
+  court.timesPerPeriod = call.inputs._timesPerPeriod;
+  court.save();
+}
+
+export function CreateSubcourtCallHandler(call: CreateSubcourtCall): void {
+  let counter = CourtCounter.load("CourtCounter");
+  if (!counter) {
+    counter = new CourtCounter("CourtCounter");
+    counter.numCourts = BigInt.fromI32(0);
+  }
+  let court = Court.load(counter.numCourts.toString());
+
+  if (!court) {
+    court = new Court(counter.numCourts.toString());
+  }
+
+  court.hiddenVotes = call.inputs._hiddenVotes;
+  court.timesPerPeriod = call.inputs._timesPerPeriod;
+
+  counter.numCourts = counter.numCourts.plus(BigInt.fromI32(1));
+  counter.save();
+  court.save();
+}
+
+export function handleStakeSet(event: StakeSetEvent): void {
+  // proxy for unstaking due to inactivity eg msg.sender != _address
+  // event.transaction.from is tx.origin
+  // false positive for jurors with smart contract wallets
+  if (event.transaction.from.notEqual(event.params._address)){
+    let inactivity = UnstakingInactivity.load(event.transaction.hash.toHexString()+"-"+event.params._address.toHexString());
+    if (!inactivity){
+      inactivity = new UnstakingInactivity(event.transaction.hash.toHexString()+"-"+event.params._address.toHexString());
+    }
+    inactivity.blockNumber = event.block.number;
+    inactivity.juror = event.params._address;
+    inactivity.save();
+  }
+}
+
 export function handleDraw(event: DrawEvent): void {
   let draw = Draw.load(
     event.params._disputeID.toString().concat("-").concat(event.params._appeal.toString()).concat("-").concat(event.params._address.toHexString())
   )
+  
   if (draw) {
     // don't need to send duplicate notifications
     log.info("Draw entity already exists for dispute {} and round {}", [event.params._disputeID.toString(), event.params._appeal.toString()]);
@@ -58,10 +113,24 @@ export function handleDisputeCreation(event: DisputeCreationEvent): void {
   let contract = KlerosLiquid.bind(event.address)
   let disputeData = contract.disputes(event.params._disputeID)
   dispute.subcourt = disputeData.value0.toString()
-  const subcourtData = contract.getSubcourt(BigInt.fromString(dispute.subcourt))
-  const timesPerPeriod = subcourtData.getTimesPerPeriod()
-  log.info("Subcourt id {}, times per period", [dispute.subcourt, timesPerPeriod.toString()])
+  const subcourtGetterData = contract.getSubcourt(BigInt.fromString(dispute.subcourt))
 
+  let court = Court.load(
+    disputeData.value0.toString()
+  )
+
+  // first dispute create the general court (created in constructor without an event)
+  if (event.params._disputeID == BigInt.fromI32(0)) {
+    court = new Court("0")
+    const subcourtData = contract.courts(BigInt.fromI32(0))
+    court.hiddenVotes = subcourtData.getHiddenVotes()
+    court.timesPerPeriod = subcourtGetterData.getTimesPerPeriod()
+    court.save()
+  }
+
+  const timesPerPeriod = subcourtGetterData.getTimesPerPeriod()
+  log.info("Subcourt id {}, times per period", [dispute.subcourt, timesPerPeriod.toString()])
+  contract.courts(BigInt.fromString(dispute.subcourt))
   dispute.periodDeadline = timesPerPeriod[0].plus(event.block.timestamp)
   dispute.currentRuling = BigInt.fromI32(0)
   dispute.save()

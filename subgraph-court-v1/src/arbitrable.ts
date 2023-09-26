@@ -20,7 +20,6 @@ export function handleMetaEvidence(event: MetaEvidenceEvent): void {
   const metaEvidence = new MetaEvidence(event.params._evidence)
 
   arbitrableHistory.metaEvidence = event.params._evidence;
-  arbitrableHistory.metaEvidenceId = event.params._metaEvidenceID;
   arbitrableHistory.arbitrable = event.address;
 
   let jsonStr = ipfs.cat(event.params._evidence);
@@ -81,6 +80,8 @@ export function handleMetaEvidence(event: MetaEvidenceEvent): void {
   }
 
   arbitrableHistory.save();
+  metaEvidence.save();
+
 }
 
 

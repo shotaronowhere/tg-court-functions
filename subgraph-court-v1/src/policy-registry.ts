@@ -3,11 +3,17 @@ import { Court } from "../generated/schema"
 import { ipfs, log, json, Bytes } from "@graphprotocol/graph-ts";
 
 export function handlePolicyUpdate(event: PolicyUpdateEvent): void {
-  let court = new Court(
+  let court = Court.load(
     event.params._subcourtID.toString()
   )
+
+  if (!court) {
+    court = new Court(
+      event.params._subcourtID.toString()
+    )
+  }
   court.policy = event.params._policy
-  
+
   let jsonStr = ipfs.cat(event.params._policy);
   if (!jsonStr) {
     log.error('Failed to fetch policy #{} SubcourtID: {}', [event.params._policy, event.params._subcourtID.toString()]);

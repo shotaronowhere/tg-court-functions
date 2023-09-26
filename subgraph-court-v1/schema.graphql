@@ -29,7 +29,6 @@ type ArbitrableHistory @entity(immutable: true) {
   id: String!
   arbitrable: Arbitrable! # address
   metaEvidence:  MetaEvidence!
-  metaEvidenceId: BigInt! # uint256
 }
 
 type MetaEvidence @entity(immutable: true) {
@@ -49,9 +48,16 @@ type RulingOptions @entity(immutable: true) {
   titles: [String!]!
 }
 
+type CourtCounter @entity {
+  id: String!
+  numCourts: BigInt!
+}
+
 type Court @entity {
   id: String!
-  policy: String!
+  timesPerPeriod: [BigInt!]
+  hiddenVotes: Boolean
+  policy: String
   name: String
   description: String
   summary: String
@@ -78,5 +84,11 @@ type AppealDecision @entity(immutable: true) {
   id: Bytes!
   disputeID: BigInt! # uint256
   arbitrable: Bytes! # address
+  blockNumber: BigInt!
+}
+
+type UnstakingInactivity @entity(immutable: true) {
+  id: String!
+  juror: Bytes! # address
   blockNumber: BigInt!
 }

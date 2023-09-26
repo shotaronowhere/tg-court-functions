@@ -9,27 +9,6 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      "bot-block-heights": {
-        Row: {
-          bot_name: string
-          height: number | null
-          network: string
-          timestamp: number | null
-        }
-        Insert: {
-          bot_name: string
-          height?: number | null
-          network: string
-          timestamp?: number | null
-        }
-        Update: {
-          bot_name?: string
-          height?: number | null
-          network?: string
-          timestamp?: number | null
-        }
-        Relationships: []
-      }
       CIDs: {
         Row: {
           cid: string
@@ -198,6 +177,33 @@ export interface Database {
           id?: string
           justification?: string | null
           voteID?: number | null
+        }
+        Relationships: []
+      }
+      "poh-vouchdb": {
+        Row: {
+          chainId: number
+          claimer: string
+          expiration: number
+          pohId: string
+          signature: string
+          voucher: string
+        }
+        Insert: {
+          chainId: number
+          claimer: string
+          expiration: number
+          pohId: string
+          signature: string
+          voucher: string
+        }
+        Update: {
+          chainId?: number
+          claimer?: string
+          expiration?: number
+          pohId?: string
+          signature?: string
+          voucher?: string
         }
         Relationships: []
       }

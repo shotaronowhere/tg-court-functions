@@ -81,6 +81,30 @@ export interface Database {
         }
         Relationships: []
       }
+      "hermes-tg-counters-testing": {
+        Row: {
+          bot_name: string
+          counter_0: number
+          counter_1: number | null
+          network: number
+          skip: number
+        }
+        Insert: {
+          bot_name: string
+          counter_0: number
+          counter_1?: number | null
+          network: number
+          skip: number
+        }
+        Update: {
+          bot_name?: string
+          counter_0?: number
+          counter_1?: number | null
+          network?: number
+          skip?: number
+        }
+        Relationships: []
+      }
       "sendgrid-scheduler": {
         Row: {
           address: string
@@ -194,7 +218,28 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_subscribers: {
+        Args: {
+          vals: string[]
+        }
+        Returns: {
+          juror_address: string
+          tg_user_id: number
+        }[]
+      }
+      hello_world: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      tg_users_subscribed_to: {
+        Args: {
+          vals: string[]
+        }
+        Returns: {
+          juror_address: string
+          tg_user_id: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

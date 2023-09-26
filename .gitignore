@@ -4,6 +4,10 @@ node_modules/*
 .yarn/cache/
 .yarn/install-state.gz
 
+# subgraph
+
+subgraph-court-v1/generated/*
+subgraph-court-v1/build/*
 
 # Local Netlify folder
 .netlify
