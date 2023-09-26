@@ -4,9 +4,12 @@ import { draw } from "./v1/draw";
 import { draw as drawV2 } from "./v2/draw";
 import { notificationSystem } from "../../config/supabase";
 import { StatusCodes } from "http-status-codes";
-import { arbitrumGoerli } from "viem/chains";
-import { supportedChainIds } from "../../config/subgraph";
-import { ArrayElement } from "../../types";
+import { supportedChainIds, rpcUrl } from "../../config/subgraph";
+import { JsonRpcProvider, Block } from "ethers";
+import { Logtail } from "@logtail/node";
+import { connect } from "amqplib";
+const { LOGTAIL_SOURCE_TOKEN, RABBITMQ_URL } = process.env
+const logtail = new Logtail(LOGTAIL_SOURCE_TOKEN);
 
 const bots = {
     V1_COURT_DRAW: "tg-court-draw",
@@ -16,12 +19,12 @@ const bots = {
 };
 
 export const notify = async () => {
+    const connection = await connect(RABBITMQ_URL);
+    const channel = await connection.createChannel();
     try {
         const { data, error } = await notificationSystem
-            .from(`hermes-tg-counters`)
-            .select("*")
-            .like("bot_name", "%-v2") // WARNING: v2 only
-            .order("bot_name", { ascending: true });
+            .from(`hermes-tg-counters-testing`)
+            .select("*");
 
         if (error || !data || data.length == 0) {
             console.error(error);
@@ -29,62 +32,55 @@ export const notify = async () => {
                 statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
             };
         }
-
-        for (const row of data) {
-            console.log(row);
-            if (!row.counter) continue; // TODO: log a warning for skipping this row
-            if (!(row.chainid in supportedChainIds)) continue; // TODO: log a warning for skipping this row
-            const chainId =
-                supportedChainIds[
-                    row.chainid as ArrayElement<typeof supportedChainIds>
-                ];
-            switch (row.bot_name) {
-                case bots.V1_COURT_APPEAL: {
-                    const timestampUpdate = await appeal(row.counter, chainId);
-                    await notificationSystem
-                        .from(`hermes-tg-counters`)
-                        .update({ counter: timestampUpdate })
-                        .eq("bot_name", bots.V1_COURT_APPEAL)
-                        .eq("chainid", chainId);
-                    break;
-                }
-                case bots.V1_COURT_DISPUTE: {
-                    const disputeIDUpdate = await dispute(row.counter, chainId);
-                    await notificationSystem
-                        .from(`hermes-tg-counters`)
-                        .update({ counter: disputeIDUpdate })
-                        .eq("bot_name", bots.V1_COURT_DISPUTE)
-                        .eq("chainid", chainId);
-                    break;
-                }
-                case bots.V2_COURT_DRAW: {
-                    const blockNumberUpdate = await drawV2(
-                        BigInt(row.counter + 1)
-                    );
-                    await notificationSystem
-                        .from(`hermes-tg-counters`)
-                        .update({ counter: Number(blockNumberUpdate) }) // Dangerous if higher than Number.MAX_SAFE_INTEGER
-                        .eq("bot_name", bots.V2_COURT_DRAW)
-                        .eq("chainid", 0 /* arbitrumGoerli.id */); // because the Supabase schema uses an int2
-                    break;
-                }
-                default: {
-                    const timestampUpdate = await draw(row.counter, chainId);
-                    await notificationSystem
-                        .from(`hermes-tg-counters`)
-                        .update({ counter: timestampUpdate })
-                        .eq("bot_name", bots.V1_COURT_DRAW)
-                        .eq("chainid", chainId);
-                    break;
-                }
+        let blocks: Map<number, number | null> = new Map();
+        for (const chainId of supportedChainIds){
+            const provider = new JsonRpcProvider(rpcUrl[chainId]);
+            try {
+                blocks.set(chainId, await provider.getBlock("latest").then((block: Block | null) => block ? block?.number : null));
+            } catch (e){
+                console.error(e);
             }
         }
 
+        for (let row of data) {
+            if (!(supportedChainIds.includes(row.network as 1 | 100))) continue; // TODO: log a warning for skipping this row
+
+            const block = blocks.get(row.network);
+            console.log('checking block');
+            if (!block) continue; 
+
+            switch (row.bot_name) {
+                /*
+                case bots.V1_COURT_APPEAL: {
+                    const block = blocks.get(row.network);
+                    if (!block) continue; 
+                    rowUpdates = await appeal(bot as TelegramBotType, queue, block, row);;
+                    break;
+                }*/
+                case bots.V1_COURT_DISPUTE: {
+                    row.counter_0 = 0;
+                    row = await dispute(channel, logtail, block, row);
+                    break;
+                }
+                default: {
+                    row = await draw(channel, logtail, block, row);
+                    break;
+                }
+            }
+
+            await notificationSystem
+            .from(`hermes-tg-counters-testing`)
+            .upsert(row)
+        }
+
+        await channel.close();
+        await connection.close();
+        
         return {
             statusCode: StatusCodes.OK,
         };
     } catch (err: any) {
-        console.log(err);
+        console.error(err);
         return {
             statusCode: StatusCodes.BAD_REQUEST,
         };

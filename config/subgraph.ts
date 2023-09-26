@@ -1,62 +1,84 @@
 import { GraphQLClient } from "graphql-request";
 import { gnosis, mainnet } from "viem/chains";
 import {
-    Sdk as KBSdk,
-    getSdk as getKBSdk,
-} from "../generated/kleros-board-graphql";
-import {
-    Sdk as KDSdk,
-    getSdk as getKDSdk,
-} from "../generated/kleros-display-graphql";
+    AppealPossibleQuery,
+    NewDisputesQuery,
+    JurorsDrawnQuery,
+    Sdk,
+    getSdk,
+} from "../generated/kleros-v1-notifications";
 import { Supported } from "../types";
+import { Address } from "viem";
 
-const subgraphUrlKD = {
+const subgraphUrl = {
     [mainnet.id]:
-        "https://api.thegraph.com/subgraphs/name/andreimvp/kleros-display-mainnet",
+        "https://api.thegraph.com/subgraphs/name/shotaronowhere/kleros-v1-notifications",
     [gnosis.id]:
-        "https://api.thegraph.com/subgraphs/name/andreimvp/kleros-display",
+        "https://api.thegraph.com/subgraphs/name/shotaronowhere/kleros-v1-notifications-gnosis",
 } as const;
 
-const subgraphUrlKB = {
-    [mainnet.id]:
-        "https://api.thegraph.com/subgraphs/name/klerosboard/klerosboard-mainnet",
-    [gnosis.id]:
-        "https://api.thegraph.com/subgraphs/name/klerosboard/klerosboard-gnosis",
-} as const;
-
-export const KBsdks = Object.entries(subgraphUrlKB).reduce(
+export const sdks = Object.entries(subgraphUrl).reduce(
     (acc, [chainId, url]) => ({
         ...acc,
-        [+chainId]: getKBSdk(new GraphQLClient(url)),
+        [+chainId]: getSdk(new GraphQLClient(url)),
     }),
-    {} as Record<Supported<(keyof typeof subgraphUrlKB)[]>, KBSdk>
-);
-
-export const KDsdks = Object.entries(subgraphUrlKD).reduce(
-    (acc, [chainId, url]) => ({
-        ...acc,
-        [+chainId]: getKDSdk(new GraphQLClient(url)),
-    }),
-    {} as Record<Supported<(keyof typeof subgraphUrlKD)[]>, KDSdk>
+    {} as Record<Supported<(keyof typeof subgraphUrl)[]>, Sdk>
 );
 
 export const supportedChainIds = [
     mainnet.id,
-    gnosis.id,
-    0 /* because the Supabase schema uses an int2 for now, should be arbitrumGoerli.id */,
+    gnosis.id
 ];
 
-export const getKDSubgraphData = async (
-    chainId: Supported<typeof supportedChainIds>,
-    key: keyof KDSdk,
-    id: string
-) => await KDsdks[chainId as keyof typeof subgraphUrlKD][key]({ id });
+require('dotenv').config()
+const { RPC_URL_GNOSIS, RPC_URL_MAINNET } = process.env
 
-export const getKBSubgraphData = async (
+export const rpcUrl = {
+    [mainnet.id]: RPC_URL_MAINNET,
+    [gnosis.id]: RPC_URL_GNOSIS,
+};
+
+export const getAppealableDisputes = async (
     chainId: Supported<typeof supportedChainIds>,
-    key: keyof KBSdk,
-    params: any
-) =>
-    await KBsdks[chainId as Supported<(keyof typeof subgraphUrlKB)[]>][key](
-        params
-    );
+    params: { skip: number;  BNLow: BigInt; BNHigh: BigInt; disputeIDLast: BigInt;}
+) => {
+    let appealableDisputes: AppealPossibleQuery | undefined = undefined;
+    try {
+        appealableDisputes = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["AppealPossible"](
+            params
+        );
+    } catch (e) {
+        console.error(e);
+    }
+    return appealableDisputes;
+}
+
+export const getNewDisputes = async (
+    chainId: Supported<typeof supportedChainIds>,
+    params: { skip: number; blockHeight: number, disputeID: number;}
+) => {
+    let newDisputes: NewDisputesQuery | undefined = undefined;
+    try {
+        newDisputes = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["NewDisputes"](
+            params
+        );
+    } catch (e) {
+        console.error(e);
+    }
+    return newDisputes;
+}
+
+export const getDraws = async (
+    chainId: Supported<typeof supportedChainIds>,
+    params: { first: number; skip: number; reminderDeadline: any; BNLow: any; BNHigh: any; }
+) => {
+    let draws: JurorsDrawnQuery | undefined = undefined;
+    try {
+        draws = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsDrawn"](
+            params
+        );
+    } catch (e) {
+        console.error(e);
+    }
+    return draws;
+}

@@ -1,0 +1,29 @@
+query JurorsDrawn(
+    $first: Int!
+    $skip: Int!,
+    $reminderDeadline: BigInt!
+    $BNLow: BigInt!,
+    $BNHigh: BigInt!){
+    draws(
+        first: $first, 
+        skip: $skip, 
+        where: {
+            blockNumber_gte: $BNLow, 
+            blockNumber_lte: $BNHigh,
+            disputeID_: {
+                period: evidence,
+                periodDeadline_gt: $reminderDeadline
+            }
+        }, 
+        orderBy: id, 
+        orderDirection: asc) {
+            address
+            disputeID{
+                id
+                periodDeadline
+                subcourt{
+                    hiddenVotes
+                }
+            }
+    }
+}

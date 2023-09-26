@@ -1,0 +1,27 @@
+query NewDisputes($skip: Int!, $blockHeight: Int!, $disputeID: BigInt!){
+    disputes(
+        first: 1000, 
+        skip: $skip, 
+        where: {
+            disputeID_gt: $disputeID
+        }, 
+        block: {number: $blockHeight}
+        orderBy: disputeID, 
+        orderDirection: asc) {
+            disputeID
+            arbitrable {
+                id
+            }
+            subcourt{
+                id
+                policy
+                name
+                description
+            }
+            arbitrableHistory {
+                metaEvidence{
+                    id
+                }
+            }
+    }
+}
