@@ -1,8 +1,0 @@
-query JurorsDrawn($timestamp: BigInt!){
-    draws(first: 1000, where: {timestamp_gt: $timestamp}, orderBy: disputeId) {
-        id
-        address
-        disputeId
-        timestamp
-    }
-}

@@ -1,43 +1,48 @@
-import { getDraws, supportedChainIds } from "../../../config/subgraph";
+import { getVotesReminders, supportedChainIds } from "../../../config/subgraph";
 import { getAddress } from "ethers";
-import { JurorsDrawnQuery } from "../../../generated/kleros-v1-notifications";
+import { JurorsVoteReminderQuery } from "../../../generated/kleros-v1-notifications";
 import { notificationSystem } from "../../../config/supabase";
 import { ArrayElement, BotData, Supported } from "../../../types";
 import { Channel } from 'amqplib';
 import { Logtail } from "@logtail/node";
 import { sendToRabbitMQ } from "../rabbitMQ";
 
-export const draw = async (
+export const voteReminder = async (
     channel: Channel,
     logtail: Logtail,
     blockHeight: number,
     botData: BotData
 ): Promise<BotData> => {
     while (1){
-        const jurorsDrawn = await getDraws(
+        const timeNow = Math.floor(Date.now() / 1000);
+        const reminderDeadline = timeNow + 86400; // 24 hours
+        const jurorsVote = await getVotesReminders(
             botData.network as Supported<typeof supportedChainIds>,
             {
+                timeNow,
+                reminderDeadline,
                 blockHeight,
-                indexLast: botData.indexLast
+                idLast: botData.indexLast,
+                blockLast: botData.blockHeight
             }
         )
-
-        if (!jurorsDrawn || !jurorsDrawn.draws){
+        
+        if (!jurorsVote || !jurorsVote.draws){
             logtail.error("invalid query or subgraph error. BotData: ", {botData});
             break;
         }
 
-        if (jurorsDrawn.draws.length == 0) {
+        if (jurorsVote.draws.length == 0) {
+            botData.indexLast = "0";
+            botData.blockHeight = blockHeight;
             break;
         }
 
-        const jurors: string[] = jurorsDrawn.draws.map((juror) => getAddress(juror.address));
-        const jurorsMessages = jurorsDrawn.draws.map((juror) => {
+        const jurors: string[] = jurorsVote.draws.map((juror) => getAddress(juror.address));
+        const jurorsMessages = jurorsVote.draws.map((juror) => {
             return { ...juror, message: formatMessage(juror, botData.network) };
           });
           
-        console.log(jurors)
-
         const tg_users = await notificationSystem.rpc("get_subscribers", {vals: jurors})
 
         if (!tg_users || tg_users.error!= null){
@@ -64,7 +69,7 @@ export const draw = async (
                         messages: [
                             {
                             cmd: "sendAnimation",
-                            file: "./assets/drawn.webp",
+                            file: "./assets/vote.webp",
                             },{
                             cmd: "sendMessage",
                             msg: juror.message,
@@ -80,31 +85,35 @@ export const draw = async (
             }
             await sendToRabbitMQ(logtail, channel, messages);
         }
-        botData.indexLast = (jurorsDrawn.draws[jurorsDrawn.draws.length - 1].index + 1).toString();
-        if (jurorsDrawn.draws.length < 1000) break;
+        botData.indexLast = jurorsVote.draws[jurorsVote.draws.length - 1].id;
+        if (jurorsVote.draws.length < 1000){
+            botData.blockHeight = blockHeight;
+            break;
+        };
     }
     return botData;
 };
 
 const formatMessage = (
-    juror: ArrayElement<JurorsDrawnQuery["draws"]>,
+    juror: ArrayElement<JurorsVoteReminderQuery["draws"]>,
     chainid: number
 ) => {
     const isCommitReveal = juror.disputeID.subcourt.hiddenVotes;
+    const action = isCommitReveal ? "reveal" : "cast";
+    const label = isCommitReveal ? "reveal" : "vote";
     const secRemaining = Math.floor(Number(juror.disputeID.periodDeadline) - Date.now()/1000)
-
     const daysRemaining = Math.floor(secRemaining / 86400)
     const hoursRemaining = Math.floor((secRemaining % 86400) / 3600)
     const timeRemaining = daysRemaining > 1 ? `${daysRemaining} days` : 
                             daysRemaining > 0 ? `${daysRemaining} days ${hoursRemaining} hours` : `${hoursRemaining} hours`
     const shortAddress = juror.address.slice(0, 5) + "..." + juror.address.slice(-3);
-    return `***Juror duty awaits you!*** 
+    return `*** Time is running out to ${action} your vote!*** 
     
-*${shortAddress}* has been drawn in [case ${
+    The ${label} phase has started in [case ${
         juror.disputeID.id
     }](https://court.kleros.io/cases/${juror.disputeID.id}) ${
-        chainid == 1 ? "" : "(*gnosis*)"
-    }.
+        chainid == 1 ? "" : "(*gnosis*) "
+    }for juror *${shortAddress}*.
     
-${isCommitReveal? "This dispute is commit-reveal. Remember to reveal your vote later.\n\n": ""} Voting starts in ${timeRemaining}. You can already start reviewing the evidence.`;
+    You have ${timeRemaining} to ${action} your vote.`
 };

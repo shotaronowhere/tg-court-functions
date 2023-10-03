@@ -83,25 +83,22 @@ export interface Database {
       }
       "hermes-tg-counters-testing": {
         Row: {
+          blockHeight: number
           bot_name: string
-          counter_0: number
-          counter_1: number | null
+          indexLast: string
           network: number
-          skip: number
         }
         Insert: {
+          blockHeight?: number
           bot_name: string
-          counter_0: number
-          counter_1?: number | null
+          indexLast?: string
           network: number
-          skip: number
         }
         Update: {
+          blockHeight?: number
           bot_name?: string
-          counter_0?: number
-          counter_1?: number | null
+          indexLast?: string
           network?: number
-          skip?: number
         }
         Relationships: []
       }

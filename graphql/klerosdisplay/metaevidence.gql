@@ -1,8 +1,0 @@
-query metaevidence($id: ID!){
-    dispute(id: $id) {
-        metaEvidenceId
-        arbitrableHistory {
-            metaEvidence
-        }
-    }
-}

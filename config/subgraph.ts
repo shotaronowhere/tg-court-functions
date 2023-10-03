@@ -1,14 +1,18 @@
 import { GraphQLClient } from "graphql-request";
 import { gnosis, mainnet } from "viem/chains";
 import {
-    AppealPossibleQuery,
     NewDisputesQuery,
     JurorsDrawnQuery,
     Sdk,
     getSdk,
+    JurorsVoteQuery,
+    JurorsVoteReminderQuery,
+    JurorsCommitQuery,
+    JurorsCommitReminderQuery,
+    JurorsAppealQuery,
+    JurorsAppealReminderQuery,
 } from "../generated/kleros-v1-notifications";
 import { Supported } from "../types";
-import { Address } from "viem";
 
 const subgraphUrl = {
     [mainnet.id]:
@@ -40,11 +44,11 @@ export const rpcUrl = {
 
 export const getAppealableDisputes = async (
     chainId: Supported<typeof supportedChainIds>,
-    params: { skip: number;  BNLow: BigInt; BNHigh: BigInt; disputeIDLast: BigInt;}
+    params: { reminderDeadline: any; blockHeight: number; indexLast: any; }
 ) => {
-    let appealableDisputes: AppealPossibleQuery | undefined = undefined;
+    let appealableDisputes: JurorsAppealQuery | undefined = undefined;
     try {
-        appealableDisputes = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["AppealPossible"](
+        appealableDisputes = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsAppeal"](
             params
         );
     } catch (e) {
@@ -55,30 +59,107 @@ export const getAppealableDisputes = async (
 
 export const getNewDisputes = async (
     chainId: Supported<typeof supportedChainIds>,
-    params: { skip: number; blockHeight: number, disputeID: number;}
+    params: { blockHeight: number, disputeID: number;}
 ) => {
-    let newDisputes: NewDisputesQuery | undefined = undefined;
+    let res: NewDisputesQuery | undefined = undefined;
     try {
-        newDisputes = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["NewDisputes"](
+        res = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["NewDisputes"](
             params
         );
     } catch (e) {
         console.error(e);
     }
-    return newDisputes;
+    return res;
 }
 
 export const getDraws = async (
     chainId: Supported<typeof supportedChainIds>,
-    params: { first: number; skip: number; reminderDeadline: any; BNLow: any; BNHigh: any; }
+    params: { blockHeight: number; indexLast: any; }
 ) => {
-    let draws: JurorsDrawnQuery | undefined = undefined;
+    let res: JurorsDrawnQuery | undefined = undefined;
     try {
-        draws = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsDrawn"](
+        res = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsDrawn"](
             params
         );
     } catch (e) {
         console.error(e);
     }
-    return draws;
+    return res;
+}
+
+export const getCommits = async (
+    chainId: Supported<typeof supportedChainIds>,
+    params: { reminderDeadline: any; blockHeight: number; indexLast: any; }
+) => {
+    let res: JurorsCommitQuery | undefined = undefined;
+    try {
+        res = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsCommit"](
+            params
+        );
+    } catch (e) {
+        console.error(e);
+    }
+    return res;
+}
+
+export const getCommitReminders = async (
+    chainId: Supported<typeof supportedChainIds>,
+    params: { reminderDeadline: any; timeNow: any; blockHeight: number; idLast: string; blockLast: any; }
+) => {
+    let res: JurorsCommitReminderQuery | undefined = undefined;
+    try {
+        res = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsCommitReminder"](
+            params
+        );
+    } catch (e) {
+        console.error(e);
+    }
+    return res;
+}
+
+export const getVotes = async (
+    chainId: Supported<typeof supportedChainIds>,
+    params: { reminderDeadline: any; blockHeight: number; indexLast: any; }
+) => {
+    let res: JurorsVoteQuery | undefined = undefined;
+    try {
+        res = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsVote"](
+            params
+        );
+    } catch (e) {
+        console.error(e);
+    }
+    return res;
+}
+
+
+export const getVotesReminders = async (
+    chainId: Supported<typeof supportedChainIds>,
+    params: { reminderDeadline: any; timeNow: any; blockHeight: number; idLast: string; blockLast: any; }
+) => {
+    let res: JurorsVoteReminderQuery | undefined = undefined;
+    try {
+        res = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsVoteReminder"](
+            params
+        );
+    } catch (e) {
+        console.error(e);
+    }
+    return res;
+}
+
+
+export const getAppealReminders = async (
+    chainId: Supported<typeof supportedChainIds>,
+    params: { reminderDeadline: any; timeNow: any; blockHeight: number; idLast: string; blockLast: any; }
+) => {
+    let res: JurorsAppealReminderQuery | undefined = undefined;
+    try {
+        res = await sdks[chainId as Supported<(keyof typeof subgraphUrl)[]>]["JurorsAppealReminder"](
+            params
+        );
+    } catch (e) {
+        console.error(e);
+    }
+    return res;
 }

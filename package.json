@@ -15,13 +15,13 @@
     "postinstall": "yarn generate",
     "codegen": "cd subgraph-court-v1 && graph codegen",
     "build": "cd subgraph-court-v1 && graph build",
-    "deploy-xdai": "cd subgraph-court-v1 && mustache config/xdai.json subgraph.template.yaml > subgraph.yaml && yarn generate && graph deploy --product hosted-service shotaronowhere/kleros-v1-notifications-gnosis",
-    "deploy-mainnet": "cd subgraph-court-v1 && mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml && yarn generate && graph deploy --product hosted-service shotaronowhere/kleros-v1-notifications"
+    "deploy-xdai": "cd subgraph-court-v1 && mustache config/xdai.json subgraph.template.yaml > subgraph.yaml && mustache config/xdai.json src/kleros-liquid.template > src/kleros-liquid.ts && yarn generate && graph deploy --product hosted-service shotaronowhere/kleros-v1-notifications-gnosis",
+    "deploy-mainnet": "cd subgraph-court-v1 && mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml && mustache config/mainnet.json src/kleros-liquid.template > src/kleros-liquid.ts  && yarn generate && graph deploy --product hosted-service shotaronowhere/kleros-v1-notifications"
   },
   "dependencies": {
     "@grammyjs/auto-retry": "^1.1.1",
-    "@graphprotocol/graph-cli": "^0.57.0",
-    "@graphprotocol/graph-ts": "0.30.0",
+    "@graphprotocol/graph-cli": "^0.58.0",
+    "@graphprotocol/graph-ts": "0.31.0",
     "@graphql-codegen/cli": "^5.0.0",
     "@graphql-codegen/typescript": "^4.0.1",
     "@graphql-codegen/typescript-graphql-request": "^5.0.0",

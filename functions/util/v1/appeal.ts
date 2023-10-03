@@ -1,141 +1,105 @@
-import axios from "axios";
-import { datalake } from "../../../config/supabase";
-import {
-    supportedChainIds,
-    getKBSubgraphData,
-    getKDSubgraphData,
-} from "../../../config/subgraph";
-import { AppealableDisputesQuery } from "../../../generated/kleros-board-graphql";
-import { ArrayElement } from "../../../types";
-import PQueue from "p-queue";
-
-const queue = new PQueue({
-    intervalCap: 20,
-    interval: 60000,
-    carryoverConcurrencyCount: true,
-});
+import { getAppealableDisputes, supportedChainIds } from "../../../config/subgraph";
+import { getAddress } from "ethers";
+import { JurorsAppealQuery } from "../../../generated/kleros-v1-notifications";
+import { notificationSystem } from "../../../config/supabase";
+import { ArrayElement, BotData, Supported } from "../../../types";
+import { Channel } from 'amqplib';
+import { Logtail } from "@logtail/node";
+import { sendToRabbitMQ } from "../rabbitMQ";
 
 export const appeal = async (
-    timestampLastUpdate: number,
-    chainid: ArrayElement<typeof supportedChainIds>
-) => {
-    const AppealableDisputesData = (await getKBSubgraphData(
-        chainid,
-        "AppealableDisputes",
-        timestampLastUpdate
-    )) as AppealableDisputesQuery;
-
-    if (!AppealableDisputesData || !AppealableDisputesData.disputes)
-        throw new Error("invalid timestamp or subgraph error");
-
-    for (const appeal of AppealableDisputesData.disputes) {
-        const MetaevidenceData = await getKDSubgraphData(
-            chainid,
-            "metaevidence",
-            appeal.disputeID
-        );
-
-        if (!MetaevidenceData || !MetaevidenceData.dispute)
-            throw new Error("invalid dispute or subgraph error");
-
-        let metaEvidenceUri =
-            MetaevidenceData.dispute.arbitrableHistory?.metaEvidence;
-        if (!metaEvidenceUri) {
-            const { data } = await datalake
-                .from("court-v1-metaevidence")
-                .select("uri")
-                .eq("chainId", chainid)
-                .eq("arbitrable", appeal.arbitrable.id)
-                .eq("metaEvidenceId", MetaevidenceData.dispute.metaEvidenceId);
-
-            if (data && data.length) {
-                metaEvidenceUri = data[0].uri ?? undefined;
+    channel: Channel,
+    logtail: Logtail,
+    blockHeight: number,
+    botData: BotData
+): Promise<BotData> => {
+    while (1){
+        const reminderDeadline = Math.floor(Date.now() / 1000) + 86400;
+        const jurorsAppeal = await getAppealableDisputes(
+            botData.network as Supported<typeof supportedChainIds>,
+            {
+                reminderDeadline,
+                blockHeight,
+                indexLast: botData.indexLast,
             }
+        )
+        
+        console.log(jurorsAppeal);
+
+        if (!jurorsAppeal || !jurorsAppeal.draws){
+            logtail.error("invalid query or subgraph error. BotData: ", {botData});
+            break;
         }
 
-        const msg = await formatMessage(
-            metaEvidenceUri,
-            appeal,
-            chainid == 1 ? "ethereum" : "gnosis"
-        );
+        if (jurorsAppeal.draws.length == 0) {
+            break;
+        }
 
-        await queue.add(async () => {
-            await axios.post(
-                `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`,
-                {
-                    chat_id: process.env.NOTIFICATION_CHANNEL,
-                    text: msg,
-                    parse_mode: "Markdown",
-                    disable_web_page_preview: true,
+        const jurors: string[] = jurorsAppeal.draws.map((juror) => getAddress(juror.address));
+          
+        const tg_users = await notificationSystem.rpc("get_subscribers", {vals: jurors})
+
+        if (!tg_users || tg_users.error!= null){
+            break;
+        }
+
+        const jurorsMessages = jurorsAppeal.draws.map((juror) => {
+            return { ...juror, message: formatMessage(juror, botData.network)};
+          });
+
+          if(tg_users.data.length != 0){
+            let messages = [];
+            for (const juror of jurorsMessages) {
+                tg_users.data.find((tg_user) => tg_user.juror_address == getAddress(juror.address));
+                // get_subscribers returns sorted by juror_address
+                let index = tg_users.data.findIndex((tg_user) => tg_user.juror_address == getAddress(juror.address));
+                if (index == -1) continue; 
+                let tg_subcribers : number[] = [];
+                while (tg_users.data[index]?.juror_address == getAddress(juror.address)){
+                    tg_subcribers.push(tg_users.data[index]?.tg_user_id);
+                    index++;
                 }
-            );
-        });
-        if (appeal.lastPeriodChange > timestampLastUpdate) {
-            timestampLastUpdate = appeal.lastPeriodChange;
+                // Telegram API malfunctioning, can't send caption with animation
+                // sending two messages instead
+                messages.push(
+                    { 
+                        tg_subcribers, 
+                        messages: [
+                            {
+                            cmd: "sendAnimation",
+                            file: "./assets/drawn.webp",
+                            },{
+                            cmd: "sendMessage",
+                            msg: juror.message,
+                            options: 
+                                {
+                                    parse_mode: "Markdown",
+                                }
+                            }
+                        ]
+                    }
+                );
+            }
+            await sendToRabbitMQ(logtail, channel, messages);
         }
+        botData.indexLast += (jurorsAppeal.draws[jurorsAppeal.draws.length - 1].disputeID.periodAppealIndex + 1).toString();
+        if (jurorsAppeal.draws.length < 1000) break;
     }
-    await queue.onIdle();
-    return timestampLastUpdate;
+    return botData;
 };
 
-const formatMessage = async (
-    metaEvidenceUri: string | undefined,
-    appeal: any,
-    network: string
-) => {
-    let res;
-    if (metaEvidenceUri) {
-        try {
-            res = await axios.get(`https://ipfs.kleros.io/${metaEvidenceUri}`);
-        } catch (e) {}
-    }
-    const title = res?.data?.title;
-    const description = res?.data?.description;
-    const isReality = "A reality.eth question" == title;
-    const isModerate = (res?.data?.fileURI as string).includes(
-        "Content%20Moderation"
-    );
-    const refuseToArbitrate = appeal.currentRulling == 0;
-    let answerString = "";
-    if (refuseToArbitrate) {
-        answerString = "Refuse to arbitrate";
-    } else if (res?.data?.rulingOptions) {
-        const answerDes =
-            res?.data?.rulingOptions?.descriptions[
-                Number(appeal.currentRulling - 1)
-            ];
-        const answerTitle =
-            res?.data?.rulingOptions?.titles[Number(appeal.currentRulling - 1)];
-        answerString = `${answerTitle}, ${answerDes}`;
-    } else if (isModerate) {
-        answerString =
-            appeal.currentRulling == 1
-                ? `Yes, the user broke the rules`
-                : `No, the user didn't break the rules`;
-    } else {
-        answerString = `Kleros ruling ${appeal.currentRulling}`;
-    }
-    let questionString = isModerate
-        ? "Did the user break the rules? (Content Moderation)"
-        : res?.data?.question;
-
-    return `[Dispute ${appeal.disputeID}](https://court.kleros.io/cases/${
-        appeal.disputeID
-    }) on ${network} concluded it's current round!
-      
-*${description}*
-
-Question: ${questionString ? questionString : "See court for question"}
-
-Current Ruling: ${
-        answerString
-            ? answerString
-            : `${appeal.currentRulling} (see court for ruling meaning)`
-    }
-
-If you think the ruling is incorrect, you can request an [appeal]${
-        isReality
-            ? `(https://resolve.kleros.io/cases/${appeal.disputeID})`
-            : `(https://court.kleros.io/cases/${appeal.disputeID})`
-    }.`;
+const formatMessage = (
+    appeal: ArrayElement<JurorsAppealQuery["draws"]>,
+    network: number
+): string => {
+    const secRemaining = Math.floor(Number(appeal.disputeID.periodDeadline) - Date.now()/1000)
+    const daysRemaining = Math.floor(secRemaining / 86400)
+    const hoursRemaining = Math.floor((secRemaining % 86400) / 3600)
+    const timeRemaining = daysRemaining > 1 ? `${daysRemaining} days` : 
+                            daysRemaining > 0 ? `${daysRemaining} days ${hoursRemaining} hours` : `${hoursRemaining} hours`
+    return `[Dispute ${appeal?.disputeID.id}](https://court.kleros.io/cases/${
+        appeal?.disputeID.id
+    }) ${network == 100 ? "(*gnosis*) " : ""}concluded it's current round!
+    
+If you think the ruling is incorrect, you can request an [appeal](https://court.kleros.io/cases/${appeal.disputeID.id}). There is ${timeRemaining} left to appeal.`
 };

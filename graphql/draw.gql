@@ -1,23 +1,22 @@
 query JurorsDrawn(
-    $first: Int!
-    $skip: Int!,
-    $reminderDeadline: BigInt!
-    $BNLow: BigInt!,
-    $BNHigh: BigInt!){
+    $blockHeight: Int!,
+    $indexLast: BigInt!){
     draws(
-        first: $first, 
-        skip: $skip, 
+        first: 1000, 
         where: {
-            blockNumber_gte: $BNLow, 
-            blockNumber_lte: $BNHigh,
+            index_gte: $indexLast,
             disputeID_: {
                 period: evidence,
-                periodDeadline_gt: $reminderDeadline
+            },
+            round_:{
+                active: true
             }
         }, 
-        orderBy: id, 
+        block: {number: $blockHeight},
+        orderBy: index, 
         orderDirection: asc) {
             address
+            index
             disputeID{
                 id
                 periodDeadline

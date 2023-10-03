@@ -1,0 +1,24 @@
+query JurorsAppeal(
+    $blockHeight: Int!,
+    $indexLast: BigInt!){
+    draws(
+        first: 1000,
+        where: {
+            disputeID_: {
+                period: appeal,
+                periodAppealIndex_gte: $indexLast
+            }
+        }, 
+        block: {number: $blockHeight},
+        orderBy: disputeID__periodAppealIndex, 
+        orderDirection: asc) {
+        address
+        voted
+        disputeID{
+            periodAppealIndex
+            currentRuling
+            periodDeadline
+            id
+        }
+    }
+}

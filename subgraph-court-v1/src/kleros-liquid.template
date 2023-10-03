@@ -45,7 +45,7 @@ export function CastCommitCallHandler(call: CastCommitCall): void {
     log.error("CastCommitCallHandler: voteIDs length is zero or null", []);
     return;
   }
-  let contract = KlerosLiquid.bind(changetype<Address>(Address.fromHexString("0x9c1da9a04925bdfdedf0f6421bc7eea8305f9002")))
+  let contract = KlerosLiquid.bind(changetype<Address>(Address.fromHexString("{{kleros.address}}")))
   const vote = contract.getVote(call.inputs._disputeID, round.round, call.inputs._voteIDs[0])
 
   let draw = Draw.load(
@@ -79,7 +79,7 @@ export function CastVoteCallHandler(call: CastVoteCall): void {
     log.error("CastCommitCallHandler: voteIDs length is zero or null", []);
     return;
   }
-  let contract = KlerosLiquid.bind(changetype<Address>(Address.fromHexString("0x9c1da9a04925bdfdedf0f6421bc7eea8305f9002")))
+  let contract = KlerosLiquid.bind(changetype<Address>(Address.fromHexString("{{kleros.address}}")))
   const vote = contract.getVote(call.inputs._disputeID, round.round, call.inputs._voteIDs[0])
 
   let draw = Draw.load(

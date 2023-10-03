@@ -1,27 +1,29 @@
-import { getDraws, supportedChainIds } from "../../../config/subgraph";
+import { getVotes, supportedChainIds } from "../../../config/subgraph";
 import { getAddress } from "ethers";
-import { JurorsDrawnQuery } from "../../../generated/kleros-v1-notifications";
+import { JurorsVoteQuery } from "../../../generated/kleros-v1-notifications";
 import { notificationSystem } from "../../../config/supabase";
 import { ArrayElement, BotData, Supported } from "../../../types";
 import { Channel } from 'amqplib';
 import { Logtail } from "@logtail/node";
 import { sendToRabbitMQ } from "../rabbitMQ";
 
-export const draw = async (
+export const vote = async (
     channel: Channel,
     logtail: Logtail,
     blockHeight: number,
     botData: BotData
 ): Promise<BotData> => {
     while (1){
-        const jurorsDrawn = await getDraws(
+        const reminderDeadline = Math.floor(Date.now() / 1000) + 86400;
+        const jurorsDrawn = await getVotes(
             botData.network as Supported<typeof supportedChainIds>,
             {
+                reminderDeadline,
                 blockHeight,
-                indexLast: botData.indexLast
+                indexLast: botData.indexLast,
             }
         )
-
+            console.log("jurorsDrawn: ", jurorsDrawn);
         if (!jurorsDrawn || !jurorsDrawn.draws){
             logtail.error("invalid query or subgraph error. BotData: ", {botData});
             break;
@@ -36,8 +38,6 @@ export const draw = async (
             return { ...juror, message: formatMessage(juror, botData.network) };
           });
           
-        console.log(jurors)
-
         const tg_users = await notificationSystem.rpc("get_subscribers", {vals: jurors})
 
         if (!tg_users || tg_users.error!= null){
@@ -76,35 +76,35 @@ export const draw = async (
                         ]
                     }
                 );
-
             }
             await sendToRabbitMQ(logtail, channel, messages);
         }
-        botData.indexLast = (jurorsDrawn.draws[jurorsDrawn.draws.length - 1].index + 1).toString();
+        botData.indexLast = (jurorsDrawn.draws[jurorsDrawn.draws.length - 1].disputeID.periodVoteIndex + 1).toString();
         if (jurorsDrawn.draws.length < 1000) break;
     }
     return botData;
 };
 
 const formatMessage = (
-    juror: ArrayElement<JurorsDrawnQuery["draws"]>,
+    juror: ArrayElement<JurorsVoteQuery["draws"]>,
     chainid: number
 ) => {
     const isCommitReveal = juror.disputeID.subcourt.hiddenVotes;
+    const action = isCommitReveal ? "reveal" : "cast";
+    const label = isCommitReveal ? "reveal" : "vote";
     const secRemaining = Math.floor(Number(juror.disputeID.periodDeadline) - Date.now()/1000)
-
     const daysRemaining = Math.floor(secRemaining / 86400)
     const hoursRemaining = Math.floor((secRemaining % 86400) / 3600)
     const timeRemaining = daysRemaining > 1 ? `${daysRemaining} days` : 
                             daysRemaining > 0 ? `${daysRemaining} days ${hoursRemaining} hours` : `${hoursRemaining} hours`
     const shortAddress = juror.address.slice(0, 5) + "..." + juror.address.slice(-3);
-    return `***Juror duty awaits you!*** 
+    return `*** Time to ${action} your vote!*** 
     
-*${shortAddress}* has been drawn in [case ${
+    The ${label} phase has started in [case ${
         juror.disputeID.id
     }](https://court.kleros.io/cases/${juror.disputeID.id}) ${
-        chainid == 1 ? "" : "(*gnosis*)"
-    }.
+        chainid == 1 ? "" : "(*gnosis*) "
+    }for juror *${shortAddress}*.
     
-${isCommitReveal? "This dispute is commit-reveal. Remember to reveal your vote later.\n\n": ""} Voting starts in ${timeRemaining}. You can already start reviewing the evidence.`;
+    You have ${timeRemaining} to ${action} your vote.`
 };

@@ -31,13 +31,15 @@ dataSources:
           handler: handleNewPeriod
         - event: AppealDecision(indexed uint256,indexed address)
           handler: handleAppealDecision
-        - event: StakeSet(indexed address,uint256,uint128,uint256)
-          handler: handleStakeSet
       callHandlers:
         - function: "createSubcourt(uint96,bool,uint256,uint256,uint256,uint256,uint256[4],uint256)"
           handler: CreateSubcourtCallHandler
         - function: "changeSubcourtTimesPerPeriod(uint96,uint256[4])"
           handler: ChangeSubcourtTimesPerPeriodCallHandler
+        - function: "castCommit(uint256,uint256[],bytes32)"
+          handler: CastCommitCallHandler
+        - function: "castVote(uint256,uint256[],uint256,uint256)"
+          handler: CastVoteCallHandler
       file: ./src/kleros-liquid.ts
   - kind: ethereum
     name: PolicyRegistry

@@ -1,43 +1,43 @@
-import { getDraws, supportedChainIds } from "../../../config/subgraph";
+import { getCommits, supportedChainIds } from "../../../config/subgraph";
 import { getAddress } from "ethers";
-import { JurorsDrawnQuery } from "../../../generated/kleros-v1-notifications";
+import { JurorsCommitQuery } from "../../../generated/kleros-v1-notifications";
 import { notificationSystem } from "../../../config/supabase";
 import { ArrayElement, BotData, Supported } from "../../../types";
 import { Channel } from 'amqplib';
 import { Logtail } from "@logtail/node";
 import { sendToRabbitMQ } from "../rabbitMQ";
 
-export const draw = async (
+export const commit = async (
     channel: Channel,
     logtail: Logtail,
     blockHeight: number,
     botData: BotData
 ): Promise<BotData> => {
     while (1){
-        const jurorsDrawn = await getDraws(
+        const reminderDeadline = Math.floor(Date.now() / 1000) + 86400;
+        const jurorsCommit = await getCommits(
             botData.network as Supported<typeof supportedChainIds>,
             {
+                reminderDeadline,
                 blockHeight,
-                indexLast: botData.indexLast
+                indexLast: botData.indexLast,
             }
         )
-
-        if (!jurorsDrawn || !jurorsDrawn.draws){
+        
+        if (!jurorsCommit || !jurorsCommit.draws){
             logtail.error("invalid query or subgraph error. BotData: ", {botData});
             break;
         }
 
-        if (jurorsDrawn.draws.length == 0) {
+        if (jurorsCommit.draws.length == 0) {
             break;
         }
 
-        const jurors: string[] = jurorsDrawn.draws.map((juror) => getAddress(juror.address));
-        const jurorsMessages = jurorsDrawn.draws.map((juror) => {
+        const jurors: string[] = jurorsCommit.draws.map((juror) => getAddress(juror.address));
+        const jurorsMessages = jurorsCommit.draws.map((juror) => {
             return { ...juror, message: formatMessage(juror, botData.network) };
           });
           
-        console.log(jurors)
-
         const tg_users = await notificationSystem.rpc("get_subscribers", {vals: jurors})
 
         if (!tg_users || tg_users.error!= null){
@@ -80,31 +80,31 @@ export const draw = async (
             }
             await sendToRabbitMQ(logtail, channel, messages);
         }
-        botData.indexLast = (jurorsDrawn.draws[jurorsDrawn.draws.length - 1].index + 1).toString();
-        if (jurorsDrawn.draws.length < 1000) break;
+        botData.indexLast += (jurorsCommit.draws[jurorsCommit.draws.length - 1].disputeID.periodCommitIndex + 1).toString();
+        if (jurorsCommit.draws.length < 1000) break;
     }
     return botData;
 };
 
 const formatMessage = (
-    juror: ArrayElement<JurorsDrawnQuery["draws"]>,
+    juror: ArrayElement<JurorsCommitQuery["draws"]>,
     chainid: number
 ) => {
-    const isCommitReveal = juror.disputeID.subcourt.hiddenVotes;
     const secRemaining = Math.floor(Number(juror.disputeID.periodDeadline) - Date.now()/1000)
-
     const daysRemaining = Math.floor(secRemaining / 86400)
     const hoursRemaining = Math.floor((secRemaining % 86400) / 3600)
     const timeRemaining = daysRemaining > 1 ? `${daysRemaining} days` : 
                             daysRemaining > 0 ? `${daysRemaining} days ${hoursRemaining} hours` : `${hoursRemaining} hours`
     const shortAddress = juror.address.slice(0, 5) + "..." + juror.address.slice(-3);
-    return `***Juror duty awaits you!*** 
+    return `*** Time to commit your vote!*** 
     
-*${shortAddress}* has been drawn in [case ${
+The commit phase has started in [case ${
         juror.disputeID.id
     }](https://court.kleros.io/cases/${juror.disputeID.id}) ${
-        chainid == 1 ? "" : "(*gnosis*)"
-    }.
+        chainid == 1 ? "" : "(*gnosis*) "
+    }for juror *${shortAddress}*.
     
-${isCommitReveal? "This dispute is commit-reveal. Remember to reveal your vote later.\n\n": ""} Voting starts in ${timeRemaining}. You can already start reviewing the evidence.`;
+This dispute is commit-reveal. Remember to reveal your vote later.
+
+You have ${timeRemaining} to commit your vote.`;
 };

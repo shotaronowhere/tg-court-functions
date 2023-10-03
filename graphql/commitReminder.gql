@@ -1,0 +1,31 @@
+query JurorsCommitReminder(
+    $reminderDeadline: BigInt!,
+    $timeNow: BigInt!,
+    $blockHeight: Int!,
+    $idLast: String!,
+    $blockLast: BigInt!){
+    draws(
+        first: 1000,
+        where: {
+            id_gt: $idLast
+            disputeID_: {
+                period: commit,
+                periodDeadline_lte: $reminderDeadline,
+                periodDeadline_gt: $timeNow,
+                lastPeriodChangeBlock_gt: $blockLast
+            },
+            round_:{
+                active: true
+            }
+        }, 
+        block: {number: $blockHeight},
+        orderBy: id,
+        orderDirection: asc) {
+        id
+        address
+        disputeID{
+            periodDeadline
+            id
+        }
+    }
+}

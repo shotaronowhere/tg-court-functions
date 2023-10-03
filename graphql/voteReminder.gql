@@ -1,0 +1,32 @@
+query JurorsVoteReminder(
+    $reminderDeadline: BigInt!,
+    $timeNow: BigInt!,
+    $blockHeight: Int!,
+    $idLast: String!){
+    draws(
+        first: 1000,
+        where: {
+            id_gt: $idLast
+            disputeID_: {
+                period: vote,
+                periodDeadline_lte: $reminderDeadline,
+                periodDeadline_gt: $timeNow,
+            },
+            round_:{
+                active: true
+            }
+        }, 
+        block: {number: $blockHeight},
+        orderBy: id,
+        orderDirection: asc) {
+        address
+        id
+        disputeID{
+            periodDeadline
+            id
+            subcourt{
+                hiddenVotes
+            }
+        }
+    }
+}
