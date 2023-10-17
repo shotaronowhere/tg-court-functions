@@ -1,6 +1,6 @@
 export async function retryPromise<T>(
   promiseFactory: () => Promise<T | undefined>,
-  maxRetries: number = 10,
+  maxRetries: number = 3,
   delayMs: number = 10000
 ): Promise<T | undefined> {
   let retries = 0;

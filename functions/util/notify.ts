@@ -1,28 +1,38 @@
 import { appeal } from "./v1/appeal";
+import { appealV2 } from "./v2/appeal";
 import { dispute } from "./v1/dispute";
+import { dispute as disputeV2} from "./v2/dispute";
 import { draw } from "./v1/draw";
-import { vote } from "./v1/vote";
-import { commit } from "./v1/commit";
-import { commitReminder } from "./v1/commitReminder";
-import { voteReminder } from "./v1/voteReminder";
-import { draw as drawV2 } from "./v2/draw";
+import { drawV2 } from "./v2/draw";
+import { period } from "./v1/period";
+import { periodV2 } from "./v2/period";
+import { periodReminder } from "./v1/periodReminder";
+import { periodReminderV2 } from "./v2/periodReminder";
+import { appealReminder } from "./v1/appealReminder";
+import { appealReminderV2 } from "./v2/appealReminder";
 import { notificationSystem } from "../../config/supabase";
+import { Supported } from "../../types";
 import { StatusCodes } from "http-status-codes";
-import { supportedChainIds, rpcUrl } from "../../config/subgraph";
+import { supportedChainIdsV1, supportedChainIdsV2, rpcUrl } from "../../config/subgraph";
 import { JsonRpcProvider, Block } from "ethers";
 import { Logtail } from "@logtail/node";
 import { connect } from "amqplib";
-import { appealReminder } from "./v1/appealReminder";
-const { LOGTAIL_SOURCE_TOKEN, RABBITMQ_URL } = process.env
+import { Wallet } from 'ethers';
+const { LOGTAIL_SOURCE_TOKEN, RABBITMQ_URL, SIGNER_KEY, TEST_TG_USER_ID } = process.env
 const logtail = new Logtail(LOGTAIL_SOURCE_TOKEN);
+// Getting private key from environment variable
+
+const signer = new Wallet(SIGNER_KEY);
+const testTgUserId = TEST_TG_USER_ID;
 
 export const notify = async () => {
     const connection = await connect(RABBITMQ_URL);
     const channel = await connection.createChannel();
     try {
         const { data, error } = await notificationSystem
-            .from(`hermes-tg-counters-testing`)
+            .from(`hermes-counters`)
             .select("*");
+
 
         if (error || !data || data.length == 0) {
             console.error(error);
@@ -31,7 +41,7 @@ export const notify = async () => {
             };
         }
         let blocks: Map<number, number | null> = new Map();
-        for (const chainId of supportedChainIds){
+        for (const chainId of supportedChainIdsV1){
             const provider = new JsonRpcProvider(rpcUrl[chainId]);
             try {
                 blocks.set(chainId, await provider.getBlock("finalized").then((block: Block | null) => block ? block?.number : null));
@@ -40,53 +50,74 @@ export const notify = async () => {
             }
         }
 
-        for (let row of data) {
-            if (!(supportedChainIds.includes(row.network as 1 | 100))) continue; // TODO: log a warning for skipping this row
+        for (const chainId of supportedChainIdsV2){
+            const provider = new JsonRpcProvider(rpcUrl[chainId]);
+            try {
+                blocks.set(chainId, await provider.getBlock("finalized").then((block: Block | null) => block ? block?.number : null));
+            } catch (e){
+                console.error(e);
+            }
+        }
+
+        for (let row of data) {            
+            const isV1 = supportedChainIdsV1.includes(row.network as Supported<typeof supportedChainIdsV1>)
+            const isV2 = supportedChainIdsV2.includes(row.network as Supported<typeof supportedChainIdsV2>)
+
+            if (!(isV1 || isV2)) continue; // TODO: log a warning for skipping this row
 
             const block = blocks.get(row.network);
-            if (!block) continue; 
-
+            if (!block) {
+                console.error(`Block not found for chainId ${row.network}`);
+                continue; 
+            }
             switch (row.bot_name) {
                 case "court-dispute": {
-                    row = await dispute(channel, logtail, block, row);
+                    const notify = isV1 ? dispute : disputeV2;
+                    row = await notify(channel, logtail, signer, block, row, testTgUserId);
                     break;
                 }
                 case "court-draw": {
-                    row = await draw(channel, logtail, block, row);
+                    const notify = isV1 ? draw : drawV2;
+                    row = await notify(channel, logtail, signer, block, row, testTgUserId);
                     break;
                 }
                 case "court-commit": {
-                    row = await commit(channel, logtail, block, row);
+                    const notify = isV1 ? period : periodV2;
+                    row = await notify(channel, logtail, signer, block, row, isV1? "COMMIT" : "commit", testTgUserId);
                     break;
                 }
                 case "court-commit-reminder": {
-                    row = await commitReminder(channel, logtail, block, row);
+                    const notify = isV1 ? periodReminder : periodReminderV2;
+                    row = await notify(channel, logtail, signer, block, row, isV1? "COMMIT" : "commit", testTgUserId);
                     break;
                 }
                 case "court-vote": {
-                    row = await vote(channel, logtail, block, row);
+                    const notify = isV1 ? period : periodV2;
+                    row = await notify(channel, logtail, signer, block, row, isV1? "VOTE" : "vote", testTgUserId);
                     break;
                 }
-                case "court-vote-reminders": {
-                    row = await voteReminder(channel, logtail, block, row);
+                case "court-vote-reminder": {
+                    const notify = isV1 ? periodReminder : periodReminderV2;
+                    row = await notify(channel, logtail, signer, block, row, isV1? "VOTE" : "vote", testTgUserId);
                     break;
                 }
                 case "court-appeal": {
-                    row.indexLast = "0"
-                    row = await appeal(channel, logtail, block, row);
+                    const notify = isV1 ? appeal : appealV2;
+                    row = await notify(channel, logtail, signer, block, row, testTgUserId);
                     break;
                 }
                 case "court-appeal-reminders": {
-                    row = await appealReminder(channel, logtail, block, row);
+                    const notify = isV1 ? appealReminder : appealReminderV2;
+                    row = await notify(channel, logtail, signer, block, row, testTgUserId);
                     break;
                 }
                 default: {
-                    break;
+                    continue;
                 }
             }
 
             await notificationSystem
-            .from(`hermes-tg-counters-testing`)
+            .from(`hermes-counters`)
             .upsert(row)
         }
 

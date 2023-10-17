@@ -1,22 +1,24 @@
 import axios from "axios";
-import { getNewDisputes, supportedChainIds } from "../../../config/subgraph";
+import { getNewDisputes, supportedChainIdsV1 } from "../../../config/subgraph";
 import { NewDisputesQuery } from "../../../generated/kleros-v1-notifications";
 import { ArrayElement, BotData, Supported } from "../../../types";
 import { Channel } from 'amqplib';
 import { Logtail } from "@logtail/node";
 import { sendToRabbitMQ } from "../rabbitMQ";
 import { retryPromise } from "../retry";
+import { Wallet } from "ethers";
 
 export const dispute = async (
     channel: Channel,
     logtail: Logtail,
+    signer: Wallet,
     blockHeight: number,
-    botData: BotData
+    botData: BotData,
+    testTgUserId?: number
 ) => {
     while (1){
-        // pagination, 1000 disputes per page
-        let newDisputeData = await getNewDisputes(
-            botData.network as Supported<typeof supportedChainIds>,
+        const newDisputeData = await getNewDisputes(
+            botData.network as Supported<typeof supportedChainIdsV1>,
             {
                 blockHeight: blockHeight, 
                 disputeID: Number(botData.indexLast)
@@ -32,48 +34,49 @@ export const dispute = async (
         }
 
         let messages = [];
-        const group_id = 1350193522//Number(process.env.NOTIFICATION_CHANNEL);
-
+        const group_id = testTgUserId ?? Number(process.env.NOTIFICATION_CHANNEL);
 
         const jurorsMessages = await Promise.all(newDisputeData.disputes.map(async (draw) => {
             const metaEvidenceUri = draw.disputeID.arbitrableHistory?.metaEvidence.id ??
             await retryPromise(
                 () => {
+                    console.log("fetching metaevidence for network and disputeID: ", botData.network, draw.disputeID);
                     return fetch(`https://kleros-api.netlify.app/.netlify/functions/get-dispute-metaevidence?chainId=${botData.network}&disputeId=${draw.disputeID}`).then(async (res) => (await res.json()).metaEvidenceUri)
-                },
-                10000,
-                3).catch((e) => {console.error("dispute metaEvidenceUri fetch failed: ", draw.disputeID)});
-            console.log('finished', draw.disputeID)
-            console.log('metaEvidenceUri: ', metaEvidenceUri)
+                }).catch((e) => {console.error("dispute metaEvidenceUri fetch failed: ", draw.disputeID)});
+
             return { ...draw, message: await formatMessage(metaEvidenceUri, draw, botData.network) };
             }));
 
         for(const dispute of jurorsMessages){
 
-            messages.push(
-                { 
-                    tg_subcribers: [group_id], 
-                    messages: [{
-                        cmd: "sendMessage",
-                        msg: dispute.message,
-                        options: 
-                            {
-                                parse_mode: "Markdown",
-                                disable_web_page_preview: true
-                            }
+            const payload = { 
+                tg_subcribers: [group_id], 
+                messages: [
+                    {
+                        cmd: "sendAnimation",
+                        file: "dispute",
+                    },
+                    {
+                    cmd: "sendMessage" as "sendMessage",
+                    msg: dispute.message,
+                    options: 
+                        {
+                            parse_mode: "Markdown",
+                            disable_web_page_preview: true
                         }
-                    ]
-                }
+                    }
+                ]
+            }
+
+            messages.push(
+                { payload, signedPayload: await signer.signMessage(JSON.stringify(payload))}
             );
         }
-        console.log(messages.map((m) => m.messages[0].msg))
         if (messages.length != 0) {
-            console.log('sending to rabbitmq')
             await sendToRabbitMQ(logtail, channel, messages);
         }
         botData.indexLast = (Number(botData.indexLast) + newDisputeData.disputes.length).toString();
         // don't bother to read more pages if there are less than 1000 disputes returned in query
-        console.log('yes')
         if (newDisputeData.disputes.length < 1000) {
             break;
         }
@@ -86,10 +89,10 @@ const formatMessage = async (
     dispute: ArrayElement<NewDisputesQuery["disputes"]>,
     chainid: number
 ) => {
-    let name = dispute.subcourt.name;
+    let name = dispute.court.name;
     if (!name) {
         try {
-            name = await axios.get(`https://ipfs.kleros.io/${dispute.subcourt.policy}`).then((res) => res.data.name);
+            name = await axios.get(`https://ipfs.kleros.io/${dispute.court.policy}`).then((res) => res.data.name);
         } catch (e) {
             console.log(e);
         }
@@ -102,12 +105,10 @@ const formatMessage = async (
             const res = await axios.get(`https://ipfs.kleros.io/${metaEvidenceUri}`).catch((e) => { console.error(e); return undefined; });
             title = res?.data?.title;
             description = res?.data?.description;
-            if (!title)
-                console.log(res)
         } catch (e) {
             console.error(e);
         }
     }
 
-    return `[Dispute ${dispute.disputeID}](https://court.kleros.io/cases/${dispute.disputeID}) ${chainid == 1 ? "" : "(*gnosis*) "}created in subcourt *${name ?? `id - ${dispute.subcourt.id}`}*.${title ? `\n\n*Summary*: ${description}` : ""}`;
+    return `[Dispute ${dispute.disputeID}](https://court.kleros.io/cases/${dispute.disputeID}) (*V1${chainid == 1 ? "" : " Gnosis"}*) created in subcourt *${name ?? `id - ${dispute.court.id}`}*.${title ? `\n\n*Summary*: ${description}` : ""}`;
 };

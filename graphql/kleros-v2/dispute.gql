@@ -1,0 +1,19 @@
+query NewDisputesV2(
+    $blockHeight: Int!, 
+    $disputeID: BigInt!
+){
+	disputes(
+        first: 1000, 
+        where: {disputeID_gte: $disputeID}, 
+        block: {number: $blockHeight},
+        orderBy: disputeID, 
+        orderDirection: asc){
+            id
+            court{
+                id
+                policy
+                name
+                description
+            }
+  }
+}

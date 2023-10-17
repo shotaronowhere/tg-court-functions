@@ -1,0 +1,28 @@
+query JurorsAppeal(
+    $blockHeight: Int!,
+    $indexLast: BigInt!
+    $reminderDeadline: BigInt!){
+    userDisputeInfos(
+        first: 1000,
+        where: {
+            dispute_: {
+                period: APPEAL,
+                periodDeadline_gt: $reminderDeadline,
+                periodNotificationIndex_gte: $indexLast
+            },
+            votedAtleastOnce: true
+        }, 
+        block: {number: $blockHeight},
+        orderBy: dispute__periodNotificationIndex, 
+        orderDirection: asc) {
+        juror
+        dispute{
+            periodNotificationIndex
+            arbitrableHistory{
+                metaEvidence
+            }
+            periodDeadline
+            id
+        }
+    }
+}

@@ -63,25 +63,7 @@ export interface Database {
         }
         Relationships: []
       }
-      "hermes-tg-counters": {
-        Row: {
-          bot_name: string
-          chainid: number
-          counter: number | null
-        }
-        Insert: {
-          bot_name: string
-          chainid: number
-          counter?: number | null
-        }
-        Update: {
-          bot_name?: string
-          chainid?: number
-          counter?: number | null
-        }
-        Relationships: []
-      }
-      "hermes-tg-counters-testing": {
+      "hermes-counters": {
         Row: {
           blockHeight: number
           bot_name: string

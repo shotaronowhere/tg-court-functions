@@ -11,10 +11,8 @@ query NewDisputes(
         orderBy: disputeID, 
         orderDirection: asc) {
             disputeID
-            arbitrable {
-                id
-            }
-            subcourt{
+            arbitrated
+            court{
                 id
                 policy
                 name
@@ -22,9 +20,7 @@ query NewDisputes(
             }
             metaEvidenceId
             arbitrableHistory {
-                metaEvidence{
-                    id
-                }
+                metaEvidence
             }
     }
 }

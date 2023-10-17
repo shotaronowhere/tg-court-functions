@@ -1,29 +1,25 @@
-query JurorsCommitReminder(
+query JurorsAppealReminder(
     $reminderDeadline: BigInt!,
     $timeNow: BigInt!,
     $blockHeight: Int!,
     $idLast: String!,
     $blockLast: BigInt!){
-    draws(
+    userDisputeInfos(
         first: 1000,
         where: {
             id_gt: $idLast
-            disputeID_: {
-                period: commit,
+            dispute_: {
+                period: APPEAL,
                 periodDeadline_lte: $reminderDeadline,
-                periodDeadline_gt: $timeNow,
                 lastPeriodChangeBlock_gt: $blockLast
-            },
-            round_:{
-                active: true
             }
         }, 
         block: {number: $blockHeight},
         orderBy: id,
         orderDirection: asc) {
         id
-        address
-        disputeID{
+        juror
+        dispute{
             periodDeadline
             id
         }

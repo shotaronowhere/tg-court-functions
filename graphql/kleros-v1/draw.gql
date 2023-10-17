@@ -1,26 +1,26 @@
 query JurorsDrawn(
     $blockHeight: Int!,
     $indexLast: BigInt!){
-    draws(
+    userRoundInfos(
         first: 1000, 
         where: {
-            index_gte: $indexLast,
-            disputeID_: {
-                period: evidence,
+            drawNotificationIndex_gte: $indexLast,
+            dispute_: {
+                period: EVIDENCE,
             },
             round_:{
-                active: true
+                isCurrentRound: true
             }
         }, 
         block: {number: $blockHeight},
-        orderBy: index, 
+        orderBy: drawNotificationIndex, 
         orderDirection: asc) {
-            address
-            index
-            disputeID{
+            juror
+            drawNotificationIndex
+            dispute{
                 id
                 periodDeadline
-                subcourt{
+                court{
                     hiddenVotes
                 }
             }

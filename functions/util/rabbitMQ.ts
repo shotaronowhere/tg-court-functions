@@ -1,18 +1,8 @@
 import { Logtail } from "@logtail/node";
 import { Channel } from 'amqplib';
 
-export async function sendToRabbitMQ(logtail: Logtail, channel: Channel, newItems: {
-    tg_subcribers: number[];
-    messages: ({
-        cmd: string;
-        file: string;
-    } | {
-        cmd: string;
-        msg: string;
-        options: any;
-    })[];
-}[]) {
-    for (const item of newItems) {
+export async function sendToRabbitMQ(logtail: Logtail, channel: Channel, messages: any[]) {
+    for (const item of messages) {
 
       const message = JSON.stringify(item);
       channel.sendToQueue('tg-hermes', Buffer.from(message), {
@@ -21,7 +11,7 @@ export async function sendToRabbitMQ(logtail: Logtail, channel: Channel, newItem
     }
   
     const stats = {
-      events: newItems.length,
+      events: messages.length,
     };
   
     //channel.publish('mission.control.room', 'notifications', Buffer.from(JSON.stringify(stats)));

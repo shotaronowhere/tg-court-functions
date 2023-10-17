@@ -1,193 +1,114 @@
-import axios from "axios";
-import { Chain, createPublicClient, getAddress, http } from "viem";
-import { arbitrumGoerli } from "viem/chains";
-import { klerosCoreABI, klerosCoreAddress } from "./kleros-core";
+import { getDrawsV2, supportedChainIdsV2 } from "../../../config/subgraph";
+import { getAddress } from "ethers";
+import { JurorsDrawnV2Query } from "../../../generated/kleros-v2-notifications";
 import { notificationSystem } from "../../../config/supabase";
-import PQueue from "p-queue";
+import { ArrayElement, BotData, Supported } from "../../../types";
+import { Channel } from 'amqplib';
+import { Logtail } from "@logtail/node";
+import { sendToRabbitMQ } from "../rabbitMQ";
+import { Wallet } from "ethers";
 
-const queue = new PQueue({
-    intervalCap: 20,
-    interval: 1000,
-    carryoverConcurrencyCount: true,
-});
+export const drawV2 = async (
+    channel: Channel,
+    logtail: Logtail,
+    signer: Wallet,
+    blockHeight: number,
+    botData: BotData,
+    testTgUserId?: number
+): Promise<BotData> => {
+    while (1){
+        const jurorsDrawn = await getDrawsV2(
+            botData.network as Supported<typeof supportedChainIdsV2>,
+            {
+                blockHeight,
+                indexLast: botData.indexLast
+            }
+        )
 
-type Draw = {
-    _address?: `0x${string}`;
-    _disputeID?: bigint;
-    _roundID?: bigint;
-    _voteID?: bigint;
-};
+        if (!jurorsDrawn || !jurorsDrawn.draws){
+            logtail.error("invalid query or subgraph error. BotData: ", {botData});
+            break;
+        }
 
-type CountedDraw = Draw & { count: number };
+        if (jurorsDrawn.draws.length == 0) {
+            break;
+        }
 
-type DrawsByAddress = {
-    [key: string]: CountedDraw[];
-};
+        const jurors: string[] = jurorsDrawn.draws.map((juror) => getAddress(juror.juror.id));
+        const jurorsMessages = jurorsDrawn.draws.map((juror) => {
+            return { ...juror, message: formatMessage(juror, botData.network) };
+          });
+          
 
-export const draw = async (fromBlockNumber: bigint) => {
-    const { drawsByAddress, highestBlockNumber } = await getDrawsByAddress(
-        fromBlockNumber
-    );
-    console.log(drawsByAddress);
+        const tg_users = await notificationSystem.rpc("get_subscribers", {vals: jurors})
 
-    for (const address of Object.keys(drawsByAddress)) {
-        const draws = drawsByAddress[address];
-        const tg_users = await notificationSystem
-            .from(`tg-juror-subscriptions`)
-            .select("tg_user_id")
-            .eq("juror_address", getAddress(address));
+        if (!tg_users || tg_users.error!= null){
+            break;
+        }
 
-        if (!tg_users?.data || tg_users?.data?.length == 0) continue;
-
-        for (const tg_user of tg_users?.data!) {
-            const tg_users_id: string = tg_user.tg_user_id.toString();
-
-            for (const draw of draws) {
-                await queue.add(async () => {
-                    console.log(formatMessage(draw));
-                    await axios.post(
-                        `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`,
+        let messages = [];
+        for (const juror of jurorsMessages) {
+            let tg_subcribers : number[] = [];
+            if (testTgUserId != null){
+                tg_subcribers.push(testTgUserId);
+            } else {
+                tg_users.data.find((tg_user) => tg_user.juror_address == getAddress(juror.juror.id));
+                // get_subscribers returns sorted by juror_address
+                let index = tg_users.data.findIndex((tg_user) => tg_user.juror_address == getAddress(juror.juror.id));
+                if (index == -1) continue; 
+                while (tg_users.data[index]?.juror_address == getAddress(juror.juror.id)){
+                    tg_subcribers.push(tg_users.data[index]?.tg_user_id);
+                    index++;
+                }
+            }
+            // Telegram API malfunctioning, can't send caption with animation
+            // sending two messages instead
+            const payload = 
+            { 
+                tg_subcribers, 
+                messages: [
+                    {
+                    cmd: "sendAnimation",
+                    file: "drawn",
+                    },{
+                    cmd: "sendMessage",
+                    msg: juror.message,
+                    options: 
                         {
-                            chat_id: tg_users_id,
-                            text: formatMessage(draw),
                             parse_mode: "Markdown",
-                            disable_web_page_preview: true,
                         }
-                    );
-                });
+                    }
+                ]
             }
+
+            messages.push({ payload, signedPayload: await signer.signMessage(JSON.stringify(payload))});
         }
+        await sendToRabbitMQ(logtail, channel, messages);
+        botData.indexLast = (Number(jurorsDrawn.draws[jurorsDrawn.draws.length - 1].drawNotificationIndex) + 1).toString();
+        if (jurorsDrawn.draws.length < 1000) break;
     }
-
-    await queue.onIdle();
-    return highestBlockNumber;
+    return botData;
 };
 
-const formatMessage = (draw: CountedDraw) => {
-    if (!draw._address) return undefined;
-    const shortAddress =
-        draw._address.slice(0, 6) + "..." + draw._address.slice(-4);
-    const voteString = draw.count > 1 ? "votes" : "vote";
-    return `Juror *${shortAddress}* has been drawn in [dispute ${draw._disputeID} round ${draw._roundID}](https://v2.kleros.builders/#/cases/${draw._disputeID}) with ${draw.count} ${voteString}.`;
+const formatMessage = (
+    juror: ArrayElement<JurorsDrawnV2Query["draws"]>,
+    chainid: number
+) => {
+    const isCommitReveal = juror.dispute.court.hiddenVotes;
+    const secRemaining = Math.floor(Number(juror.dispute.periodDeadline) - Date.now()/1000)
+
+    const daysRemaining = Math.floor(secRemaining / 86400)
+    const hoursRemaining = Math.floor((secRemaining % 86400) / 3600)
+    const minRemaining = Math.floor((secRemaining % 3600) / 60)
+    const timeRemaining = `${daysRemaining > 0 ? `${daysRemaining} day${daysRemaining > 1 ? "s " : " "}` : ""}` +
+                            `${hoursRemaining > 0 ? `${hoursRemaining} hour${hoursRemaining > 1 ? "s " : " "}` : ""}` +
+                            `${minRemaining > 0 && daysRemaining == 0 ? `${minRemaining} min${minRemaining > 1 ? "s " : " "}` : ""}`
+    const shortAddress = juror.juror.id.slice(0, 5) + "..." + juror.juror.id.slice(-3);
+    return `***Juror duty awaits you!*** 
+    
+*${shortAddress}* has been drawn in [case ${
+        juror.dispute.id
+    }](https://court.kleros.io/cases/${juror.dispute.id}) (*V2*).
+    
+${isCommitReveal? "This dispute is commit-reveal. Remember to reveal your vote later.\n\n": ""} Voting starts in ${secRemaining > 60? timeRemaining.substring(0,timeRemaining.length-1): 'less than a minute'}. You can already start reviewing the evidence.`;
 };
-
-const getDrawsByAddress = async (fromBlockNumber: bigint) => {
-    const arbitrumGoerli2: Chain = process.env
-        .PRIVATE_RPC_ENDPOINT_ARBITRUMGOERLI
-        ? {
-              ...arbitrumGoerli,
-              rpcUrls: {
-                  ...arbitrumGoerli.rpcUrls,
-                  default: {
-                      http: [process.env.PRIVATE_RPC_ENDPOINT_ARBITRUMGOERLI],
-                  },
-              },
-          }
-        : arbitrumGoerli;
-
-    const client = createPublicClient({
-        chain: arbitrumGoerli2,
-        transport: http(),
-    });
-
-    // Many RPCs for Arbitrum Goerli do not support eth_newFilter
-    // In such case use getLogs() instead of createContractEventFilter()/getFilterLogs()
-    // await client
-    //   .getLogs({
-    //     address: klerosCoreAddress[arbitrumGoerli.id],
-    //     event: parseAbiItem(
-    //       "event Draw(address indexed _address, uint256 indexed _disputeID, uint256 _roundID, uint256 _voteID)"
-    //     ),
-    //     fromBlock: 39051605n,
-    //   })
-    //   .then(console.log);
-
-    const filter = await client.createContractEventFilter({
-        abi: klerosCoreABI,
-        address: klerosCoreAddress[arbitrumGoerli.id],
-        eventName: "Draw",
-        fromBlock: fromBlockNumber,
-    });
-
-    const logs = await client.getFilterLogs({ filter });
-
-    const highestBlockNumber = logs.reduce((highest, log) => {
-        if (log.blockNumber > highest) {
-            return log.blockNumber;
-        }
-        return highest;
-    }, 0n);
-
-    const draws: Draw[] = logs.map((log) => log.args);
-
-    const countedDraws = draws.reduce(
-        (acc: { [key: string]: CountedDraw }, draw) => {
-            const key = `${draw._address}-${draw._disputeID}-${draw._roundID}`;
-            if (!acc[key]) {
-                acc[key] = {
-                    _address: draw._address,
-                    _disputeID: draw._disputeID,
-                    _roundID: draw._roundID,
-                    count: 0,
-                };
-            }
-            acc[key].count++;
-            return acc;
-        },
-        {}
-    );
-
-    const sortedDraws = Object.values(countedDraws).sort((a, b) => {
-        if (
-            a._disputeID !== undefined &&
-            b._disputeID !== undefined &&
-            a._disputeID !== b._disputeID
-        ) {
-            return Number(a._disputeID - b._disputeID);
-        }
-        if (
-            a._roundID !== undefined &&
-            b._roundID !== undefined &&
-            a._roundID !== b._roundID
-        ) {
-            return Number(a._roundID - b._roundID);
-        }
-        if (
-            a._address !== undefined &&
-            b._address !== undefined &&
-            a._address !== b._address
-        ) {
-            return a._address < b._address ? -1 : 1;
-        }
-        return 0;
-    });
-
-    const drawsByAddress: DrawsByAddress = sortedDraws.reduce(
-        (acc: { [key: string]: CountedDraw[] }, draw) => {
-            const key = draw._address ?? "";
-            if (!acc[key]) {
-                acc[key] = [];
-            }
-            acc[key].push(draw);
-            return acc;
-        },
-        {}
-    );
-
-    return { drawsByAddress, highestBlockNumber };
-};
-
-if (__filename === process.argv?.[1]) {
-    // Does not run when imported
-    if (!process.argv?.[2]) {
-        console.error("Usage: draw.ts <fromBlockNumber>");
-        process.exit(1);
-    }
-    const fromBlock = BigInt(process.argv?.[2]);
-    draw(fromBlock)
-        .then(() => process.exit(0))
-        .catch((error) => {
-            console.error(error);
-            process.exit(1);
-        });
-}

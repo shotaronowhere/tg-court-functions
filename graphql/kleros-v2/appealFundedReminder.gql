@@ -1,0 +1,14 @@
+query JurorsAppealFundedReminderV2(
+    $period: Period!
+    $blockHeight: Int!,
+    $indexLast: BigInt!){
+      classicRounds(first: 1000, where: {fundedChoices_not: []}){
+        id
+        fundedChoices
+        localDispute{
+          coreDispute{
+            id
+          }
+        }
+      }
+}

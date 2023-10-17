@@ -1,0 +1,29 @@
+query JurorsPeriod(
+    $period: Period!
+    $blockHeight: Int!,
+    $indexLast: BigInt!){
+    userRoundInfos(
+        first: 1000,
+        where: {
+            dispute_: {
+                period: $period,
+                periodNotificationIndex_gte: $indexLast
+            },
+            round_:{
+                isCurrentRound: true
+            }
+        }, 
+        block: {number: $blockHeight},
+        orderBy: dispute__periodNotificationIndex, 
+        orderDirection: asc) {
+            juror
+            dispute{
+                periodDeadline
+                periodNotificationIndex
+                id
+                court{
+                    hiddenVotes
+                }
+            }
+    }
+}
