@@ -10,7 +10,7 @@ query JurorsAppealReminderV2(
             id_gt: $idLast,
             period: appeal,
             periodDeadline_lte: $reminderDeadline,
-            lastPeriodChangeBlock_gt: $blockLast
+            lastPeriodChangeBlockNumber_gt: $blockLast
         },
         block: {number: $blockHeight},
         orderBy: id,

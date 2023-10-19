@@ -13,7 +13,7 @@ query JurorsPeriodReminderV2(
             dispute_:{
                 period: $period,
                 periodDeadline_lte: $reminderDeadline,
-                lastPeriodChangeBlock_gt: $blockLast
+                lastPeriodChangeBlockNumber_gt: $blockLast
             },
             round_:{
                 isCurrentRound: true

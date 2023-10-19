@@ -10,7 +10,6 @@ query JurorsAppeal(
                 periodDeadline_gt: $reminderDeadline,
                 periodNotificationIndex_gte: $indexLast
             },
-            votedAtleastOnce: true
         }, 
         block: {number: $blockHeight},
         orderBy: dispute__periodNotificationIndex, 

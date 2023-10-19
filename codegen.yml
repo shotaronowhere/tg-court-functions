@@ -1,14 +1,14 @@
 overwrite: true
 generates:
   ./generated/kleros-v1-notifications.ts:
-    schema: "https://api.thegraph.com/subgraphs/name/shotaronowhere/kleros-display-gnosis"
+    schema: "https://api.thegraph.com/subgraphs/name/kleros/kleros-display-gnosis"
     documents: "graphql/kleros-v1/*.gql"
     plugins:
       - "typescript"
       - "typescript-operations"
       - "typescript-graphql-request"
   ./generated/kleros-v2-notifications.ts:
-    schema: "https://api.thegraph.com/subgraphs/name/shotaronowhere/kleros-v2-core-devnet"
+    schema: "https://api.thegraph.com/subgraphs/name/kleros/kleros-v2-core-devnet"
     documents: "graphql/kleros-v2/*.gql"
     plugins:
       - "typescript"

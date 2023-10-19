@@ -5,12 +5,12 @@ query NewDisputes(
     disputes(
         first: 1000, 
         where: {
-            disputeID_gte: $disputeID
+            disputeIDNumber_gte: $disputeID
         }, 
         block: {number: $blockHeight}
-        orderBy: disputeID, 
+        orderBy: disputeIDNumber, 
         orderDirection: asc) {
-            disputeID
+            disputeIDNumber
             arbitrated
             court{
                 id

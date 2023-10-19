@@ -13,7 +13,6 @@ query NewDisputesV2(
                 id
                 policy
                 name
-                description
             }
   }
 }
